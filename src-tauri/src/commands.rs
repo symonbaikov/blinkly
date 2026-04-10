@@ -6,6 +6,7 @@ use tauri::State;
 use crate::config::{AppConfig, ConfigManager};
 use crate::events::SchedulerState;
 use crate::scheduler::{SchedulerPort, TimerScheduler};
+use crate::screen_lock;
 use crate::storage::{DateRange, DayStat, StoragePort};
 
 /// Tauri IPC error — serialized as a plain string for the frontend.
@@ -32,10 +33,7 @@ pub fn get_config(config_manager: State<Arc<ConfigManager>>) -> AppConfig {
 
 /// Validate and persist a new configuration.
 #[tauri::command]
-pub fn set_config(
-    config: AppConfig,
-    config_manager: State<Arc<ConfigManager>>,
-) -> IpcResult<()> {
+pub fn set_config(config: AppConfig, config_manager: State<Arc<ConfigManager>>) -> IpcResult<()> {
     config_manager.update(config).map_err(IpcError::from)
 }
 
@@ -71,6 +69,11 @@ pub fn pause_timer(scheduler: State<Arc<TimerScheduler>>) {
 #[tauri::command]
 pub fn resume_timer(scheduler: State<Arc<TimerScheduler>>) {
     scheduler.resume();
+}
+
+#[tauri::command]
+pub fn lock_screen() -> IpcResult<()> {
+    screen_lock::lock_screen().map_err(IpcError::from)
 }
 
 // ---------------------------------------------------------------------------

@@ -98,9 +98,7 @@ export default function StatsDashboard() {
   const totalBreaks = data.reduce((s, d) => s + d.break_count, 0);
   const totalSkips = data.reduce((s, d) => s + d.skip_count, 0);
   const skipRate =
-    totalBreaks + totalSkips > 0
-      ? Math.round((totalSkips / (totalBreaks + totalSkips)) * 100)
-      : 0;
+    totalBreaks + totalSkips > 0 ? Math.round((totalSkips / (totalBreaks + totalSkips)) * 100) : 0;
 
   return (
     <div className="h-screen flex flex-col bg-white">
@@ -111,33 +109,17 @@ export default function StatsDashboard() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-        {loading && (
-          <p className="text-sm text-gray-400 text-center py-8">Loading…</p>
-        )}
+        {loading && <p className="text-sm text-gray-400 text-center py-8">Loading…</p>}
 
-        {error && (
-          <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>
-        )}
+        {error && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 
         {!loading && !error && (
           <>
             {/* Summary cards */}
             <div className="grid grid-cols-3 gap-3">
-              <StatCard
-                label="Work time"
-                value={fmtTime(totalWork)}
-                sub="total"
-              />
-              <StatCard
-                label="Breaks taken"
-                value={String(totalBreaks)}
-                sub="completed"
-              />
-              <StatCard
-                label="Skip rate"
-                value={`${skipRate}%`}
-                sub={`${totalSkips} skipped`}
-              />
+              <StatCard label="Work time" value={fmtTime(totalWork)} sub="total" />
+              <StatCard label="Breaks taken" value={String(totalBreaks)} sub="completed" />
+              <StatCard label="Skip rate" value={`${skipRate}%`} sub={`${totalSkips} skipped`} />
             </div>
 
             {/* Bar chart */}
@@ -149,9 +131,7 @@ export default function StatsDashboard() {
                 <BarChart data={data} />
               </div>
             ) : (
-              <p className="text-sm text-gray-400 text-center py-8">
-                No data for this period yet.
-              </p>
+              <p className="text-sm text-gray-400 text-center py-8">No data for this period yet.</p>
             )}
           </>
         )}

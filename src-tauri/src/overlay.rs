@@ -48,6 +48,12 @@ pub fn spawn_overlay_listener<R: Runtime>(app: AppHandle<R>, bus: Arc<EventBus>)
                     if let Some(window) = app.get_webview_window(OVERLAY_LABEL) {
                         let _ = window.show();
                         let _ = window.set_focus();
+
+                        let window = window.clone();
+                        crate::spawn_async(async move {
+                            tokio::time::sleep(std::time::Duration::from_millis(120)).await;
+                            let _ = window.set_focus();
+                        });
                     }
                     // Also emit event for immediate update (best-effort).
                     // React polling will catch it if the event is missed.

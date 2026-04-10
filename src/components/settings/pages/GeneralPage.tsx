@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { getState, getRemaining, pauseTimer, resumeTimer, type SchedulerState } from "../../../lib/ipc";
+import {
+  getState,
+  getRemaining,
+  pauseTimer,
+  resumeTimer,
+  type SchedulerState,
+} from "../../../lib/ipc";
 
 const stateLabels: Record<SchedulerState, string> = {
   idle: "Idle",
@@ -94,9 +100,8 @@ export default function GeneralPage() {
       {/* Info */}
       <div className="bg-blue-50 rounded-xl p-4">
         <p className="text-sm text-blue-700">
-          LookAway follows the 20-20-20 rule: every 20 minutes, look at something
-          20 feet away for 20 seconds. This helps reduce eye strain during long
-          work sessions.
+          Blinkly follows the 20-20-20 rule: every 20 minutes, look at something 20 feet away for
+          20 seconds. This helps reduce eye strain during long work sessions.
         </p>
       </div>
     </div>

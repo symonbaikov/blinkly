@@ -38,7 +38,7 @@ export default function AppearancePage({ draft, update }: AppearancePageProps) {
       <div className="space-y-4">
         <ToggleRow
           label="Autostart"
-          description="Launch LookAway automatically at login"
+          description="Launch Blinkly automatically at login"
           checked={draft.autostart}
           onChange={(v) => update({ autostart: v })}
         />

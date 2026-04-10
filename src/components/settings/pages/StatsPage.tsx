@@ -88,9 +88,7 @@ export default function StatsPage() {
   const totalBreaks = data.reduce((s, d) => s + d.break_count, 0);
   const totalSkips = data.reduce((s, d) => s + d.skip_count, 0);
   const skipRate =
-    totalBreaks + totalSkips > 0
-      ? Math.round((totalSkips / (totalBreaks + totalSkips)) * 100)
-      : 0;
+    totalBreaks + totalSkips > 0 ? Math.round((totalSkips / (totalBreaks + totalSkips)) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -101,9 +99,7 @@ export default function StatsPage() {
 
       {loading && <p className="text-sm text-gray-400 text-center py-8">Loading...</p>}
 
-      {error && (
-        <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 
       {!loading && !error && (
         <>
@@ -121,9 +117,7 @@ export default function StatsPage() {
               <BarChart data={data} />
             </div>
           ) : (
-            <p className="text-sm text-gray-400 text-center py-8">
-              No data for this period yet.
-            </p>
+            <p className="text-sm text-gray-400 text-center py-8">No data for this period yet.</p>
           )}
         </>
       )}

@@ -33,11 +33,9 @@ export const setConfig = (config: AppConfig): Promise<void> =>
 
 export type SchedulerState = "idle" | "working" | "on_break" | "paused";
 
-export const getState = (): Promise<SchedulerState> =>
-  invoke<SchedulerState>("get_state");
+export const getState = (): Promise<SchedulerState> => invoke<SchedulerState>("get_state");
 
-export const getRemaining = (): Promise<number> =>
-  invoke<number>("get_remaining");
+export const getRemaining = (): Promise<number> => invoke<number>("get_remaining");
 
 export const skipBreak = (): Promise<void> => invoke<void>("skip_break");
 
@@ -48,13 +46,15 @@ export const pauseTimer = (): Promise<void> => invoke<void>("pause_timer");
 
 export const resumeTimer = (): Promise<void> => invoke<void>("resume_timer");
 
+export const lockScreen = (): Promise<void> => invoke<void>("lock_screen");
+
 // ---------------------------------------------------------------------------
 // Stats commands
 // ---------------------------------------------------------------------------
 
 export interface DateRange {
   start: string; // YYYY-MM-DD
-  end: string;   // YYYY-MM-DD
+  end: string; // YYYY-MM-DD
 }
 
 export interface DayStat {

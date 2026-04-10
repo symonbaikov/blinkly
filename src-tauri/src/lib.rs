@@ -6,6 +6,7 @@ pub mod notifications;
 pub mod overlay;
 pub mod platform;
 pub mod scheduler;
+pub mod screen_lock;
 pub mod stats;
 pub mod storage;
 pub mod tray;
@@ -59,7 +60,7 @@ pub fn run() {
     // (they are synchronous).
     let db_path = dirs::data_dir()
         .expect("cannot resolve $XDG_DATA_HOME")
-        .join("lookaway")
+        .join("blinkly")
         .join("data.db");
     let storage: Arc<dyn storage::StoragePort> =
         Arc::new(SqliteStorage::new(&db_path).expect("failed to open database"));
@@ -150,6 +151,7 @@ pub fn run() {
             commands::snooze_break,
             commands::pause_timer,
             commands::resume_timer,
+            commands::lock_screen,
             commands::get_stats,
         ])
         .run(tauri::generate_context!())

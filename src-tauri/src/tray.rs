@@ -94,7 +94,7 @@ fn build_menu<R: Runtime>(
     Menu::with_items(
         app,
         &[
-            &MenuItem::with_id(app, "status", "LookAway", false, None::<&str>)?,
+            &MenuItem::with_id(app, "status", "Blinkly", false, None::<&str>)?,
             &PredefinedMenuItem::separator(app)?,
             &MenuItem::with_id(app, ID_PAUSE_RESUME, pause_label, true, None::<&str>)?,
             &MenuItem::with_id(app, ID_BREAK_NOW, "Break Now", true, None::<&str>)?,
@@ -112,13 +112,13 @@ fn tooltip_for_state(state: &SchedulerState, remaining: u64) -> String {
         SchedulerState::Working => {
             let mins = remaining / 60;
             let secs = remaining % 60;
-            format!("LookAway — Working ({mins:02}:{secs:02} remaining)")
+            format!("Blinkly — Working ({mins:02}:{secs:02} remaining)")
         }
         SchedulerState::OnBreak => {
-            format!("LookAway — Break ({remaining}s remaining)")
+            format!("Blinkly — Break ({remaining}s remaining)")
         }
-        SchedulerState::Paused => "LookAway — Paused".to_string(),
-        SchedulerState::Idle => "LookAway — Idle".to_string(),
+        SchedulerState::Paused => "Blinkly — Paused".to_string(),
+        SchedulerState::Idle => "Blinkly — Idle".to_string(),
     }
 }
 

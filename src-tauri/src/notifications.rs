@@ -48,7 +48,7 @@ impl NotificationPort for DbusNotifier {
             Some("org.freedesktop.Notifications"),
             "Notify",
             &(
-                "lookaway",
+                "blinkly",
                 replaces_id,
                 "dialog-information",
                 title,
