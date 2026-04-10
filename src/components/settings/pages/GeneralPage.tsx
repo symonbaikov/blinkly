@@ -16,7 +16,7 @@ const stateLabels: Record<SchedulerState, string> = {
 
 const stateColors: Record<SchedulerState, string> = {
   idle: "bg-gray-100 text-gray-600",
-  working: "bg-green-100 text-green-700",
+  working: "bg-blue-100 text-blue-700",
   on_break: "bg-yellow-100 text-yellow-700",
   paused: "bg-gray-100 text-gray-500",
 };
@@ -90,7 +90,7 @@ export default function GeneralPage() {
         {(state === "working" || state === "paused") && (
           <button
             onClick={() => void handlePauseResume()}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-green-500 hover:bg-green-600 transition-colors"
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-colors"
           >
             {state === "paused" ? "Resume" : "Pause"}
           </button>
@@ -100,8 +100,8 @@ export default function GeneralPage() {
       {/* Info */}
       <div className="bg-blue-50 rounded-xl p-4">
         <p className="text-sm text-blue-700">
-          Blinkly follows the 20-20-20 rule: every 20 minutes, look at something 20 feet away for
-          20 seconds. This helps reduce eye strain during long work sessions.
+          Blinkly follows the 20-20-20 rule: every 20 minutes, look at something 20 feet away for 20
+          seconds. This helps reduce eye strain during long work sessions.
         </p>
       </div>
     </div>

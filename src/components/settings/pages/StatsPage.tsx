@@ -40,7 +40,7 @@ function BarChart({ data }: { data: DayStat[] }) {
           <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
             <div className="w-full flex flex-col justify-end" style={{ height: "80px" }}>
               <div
-                className="w-full rounded-t bg-green-400 transition-all"
+                className="w-full rounded-t bg-blue-400 transition-all"
                 style={{ height: `${h}%`, minHeight: d.work_seconds > 0 ? "4px" : "0" }}
                 title={fmtTime(d.work_seconds)}
               />

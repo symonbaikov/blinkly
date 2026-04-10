@@ -24,7 +24,7 @@ export default function AppearancePage({ draft, update }: AppearancePageProps) {
               onClick={() => update({ theme: t })}
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium capitalize transition-colors ${
                 draft.theme === t
-                  ? "bg-green-500 text-white"
+                  ? "bg-blue-500 text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >

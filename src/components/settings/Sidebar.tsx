@@ -119,29 +119,40 @@ const navItems: NavItem[] = [
 
 export default function Sidebar({ active, onChange }: SidebarProps) {
   return (
-    <div className="w-[200px] shrink-0 bg-gray-50 border-r border-gray-200 flex flex-col h-full">
+    <div className="w-[220px] shrink-0 bg-transparent flex flex-col h-full py-4 px-3">
+      {/* Brand */}
+      <div className="px-4 mb-6 mt-2 flex items-center gap-3">
+        <img src="/logo.png" alt="Blinkly Logo" className="w-8 h-8 drop-shadow-sm rounded-lg" />
+        <h2 className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-blue-500">
+          Blinkly
+        </h2>
+      </div>
+
       {/* Nav items */}
-      <nav className="flex-1 py-3 px-2 space-y-0.5">
+      <nav className="flex-1 space-y-1">
         {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onChange(item.id)}
-            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 ${
               active === item.id
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                ? "bg-white/60 text-blue-600 shadow-sm backdrop-blur-md border border-white/50 translate-x-1"
+                : "text-gray-600 hover:bg-white/40 hover:text-gray-900 hover:translate-x-0.5 border border-transparent"
             }`}
           >
-            <span className="shrink-0">{item.icon}</span>
+            <span
+              className={`shrink-0 transition-colors ${active === item.id ? "text-pink-500" : ""}`}
+            >
+              {item.icon}
+            </span>
             {item.label}
           </button>
         ))}
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-3 border-t border-gray-200">
-        <p className="text-xs font-semibold text-gray-400">Blinkly</p>
-        <p className="text-xs text-gray-300">v0.1.0</p>
+      <div className="px-4 py-4">
+        <p className="text-xs font-bold text-gray-400">v0.1.0</p>
       </div>
     </div>
   );
