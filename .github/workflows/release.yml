@@ -168,16 +168,21 @@ jobs:
               }
             }' > latest.json
 
+      - name: Collect artifacts into flat directory
+        run: |
+          mkdir -p dist
+          find src-tauri/target/release/bundle/appimage -name "*.AppImage" -exec cp {} dist/ \;
+          find src-tauri/target/release/bundle/appimage -name "*.AppImage.sig" -exec cp {} dist/ \;
+          find src-tauri/target/release/bundle/deb -name "*.deb" -exec cp {} dist/ \;
+          find src-tauri/target/release/bundle/rpm -name "*.rpm" -exec cp {} dist/ \;
+          cp latest.json dist/
+          ls -la dist/
+
       - name: Upload release assets
         uses: actions/upload-artifact@v4
         with:
           name: linux-release-assets
-          path: |
-            src-tauri/target/release/bundle/appimage/*.AppImage
-            src-tauri/target/release/bundle/appimage/*.AppImage.sig
-            src-tauri/target/release/bundle/deb/*.deb
-            src-tauri/target/release/bundle/rpm/*.rpm
-            latest.json
+          path: dist/
           if-no-files-found: error
 
   smoke-appimage:
