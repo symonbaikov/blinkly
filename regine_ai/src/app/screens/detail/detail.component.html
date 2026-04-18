@@ -1,0 +1,189 @@
+<!-- Skeleton while loading -->
+<section *ngIf="loading" style="padding:40px 0 80px">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:2.2fr 1fr;gap:40px">
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;gap:8px"><div class="skel-d skel-d-tag"></div><div class="skel-d skel-d-tag" style="width:60px"></div></div>
+        <div class="skel-d" style="height:48px;width:85%;border-radius:8px"></div>
+        <div class="skel-d" style="height:16px;width:100%;border-radius:6px"></div>
+        <div class="skel-d" style="height:16px;width:70%;border-radius:6px"></div>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <div class="skel-d" style="height:50px;width:200px;border-radius:var(--radius-btn)"></div>
+          <div class="skel-d" style="height:50px;width:140px;border-radius:var(--radius-btn)"></div>
+        </div>
+        <div style="margin-top:20px" class="skel-d" style="height:200px;width:100%;border-radius:12px"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="skel-d" style="height:180px;border-radius:var(--radius-card)"></div>
+        <div class="skel-d" style="height:120px;border-radius:var(--radius-card)"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section *ngIf="p && !loading" style="padding:40px 0 80px">
+  <div class="container">
+    <button class="btn btn-ghost btn-sm" (click)="state.navigate({name:'browse'})" style="margin-bottom:20px;color:var(--text-3)">
+      <app-icon name="arrowLeft" [size]="14"></app-icon> {{ lang === 'ru' ? 'Назад' : 'Back' }}
+    </button>
+
+    <div style="display:grid;grid-template-columns:2.2fr 1fr;gap:40px">
+      <!-- Left -->
+      <div>
+        <div class="row" style="gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <span class="tag tag-accent">
+            <app-icon [name]="cat?.icon || 'doc'" [size]="12"></app-icon>
+            {{ lang === 'ru' ? cat?.name : cat?.nameEn }}
+          </span>
+          <span class="tag">{{ $any(t)['level_' + p.level] }}</span>
+          <span *ngIf="p.premium" class="premium-badge"><app-icon name="lightning" [size]="10"></app-icon> Premium</span>
+          <ng-container *ngFor="let r of getRoles()">
+            <span *ngIf="getRole(r)" class="tag">{{ lang === 'ru' ? getRole(r)?.name : getRole(r)?.nameEn }}</span>
+          </ng-container>
+        </div>
+
+        <h1 class="display-md" style="margin:0;font-size:40px;text-wrap:balance">
+          {{ lang === 'ru' ? p.title : p.titleEn }}
+        </h1>
+        <p class="text-dim" style="margin-top:16px;font-size:17px;line-height:1.55;max-width:680px">
+          {{ p.description }}
+        </p>
+
+        <div class="row" style="margin-top:24px;gap:24px;flex-wrap:wrap">
+          <div class="row" style="gap:8px">
+            <app-stars [value]="p.rating"></app-stars>
+            <b>{{ p.rating }}</b>
+            <span class="text-faint">· 124 {{ lang === 'ru' ? 'отзывов' : 'reviews' }}</span>
+          </div>
+          <div class="text-dim" style="font-size:14px">{{ formatUses() }} {{ t.card_uses }}</div>
+          <div class="text-mono text-faint">{{ t.card_updated }} {{ p.updated }}</div>
+        </div>
+
+        <div class="row" style="gap:10px;margin-top:28px">
+          <button class="btn btn-primary btn-lg" (click)="copyFilled()">
+            <app-icon name="copy" [size]="15"></app-icon>
+            {{ copied ? t.copied : (lang === 'ru' ? 'Скопировать промпт' : 'Copy prompt') }}
+          </button>
+          <button class="btn btn-lg" (click)="state.toggleFav(p.id)"
+            [style.color]="state.favs().includes(p.id) ? 'var(--accent)' : undefined">
+            <app-icon name="bookmark" [size]="15"></app-icon>
+            {{ state.favs().includes(p.id) ? t.card_saved : t.card_save }}
+          </button>
+          <button class="btn btn-lg btn-ghost"><app-icon name="share" [size]="15"></app-icon></button>
+        </div>
+
+        <!-- Variables -->
+        <div *ngIf="variables.length > 0" style="margin-top:48px">
+          <div class="row-between" style="margin-bottom:16px">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.01em">{{ t.detail_variables }}</h2>
+            <span class="text-mono text-faint">{{ variables.length }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+            <div *ngFor="let v of variables" class="p-card" style="padding:16px">
+              <div class="text-mono" style="color:var(--accent);font-size:12px;margin-bottom:8px">{{'{{'}}{{ v.name }}{{'}}'}}</div>
+              <input class="input" [placeholder]="v.example"
+                [value]="getVarValue(v.name)"
+                (input)="setVarValue(v.name, $any($event.target).value)"
+                style="font-size:13px"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prompt block -->
+        <div style="margin-top:40px">
+          <div class="row-between" style="margin-bottom:14px">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.01em">{{ t.detail_prompt }}</h2>
+            <button class="btn btn-sm" (click)="copyFilled()">
+              <app-icon name="copy" [size]="13"></app-icon> {{ copied ? t.copied : t.copy }}
+            </button>
+          </div>
+          <div class="prompt-block">
+            <ng-container *ngFor="let part of highlightedParts">
+              <span *ngIf="part.isVar" class="tok-var">{{ part.text }}</span>
+              <span *ngIf="!part.isVar">{{ part.text }}</span>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Example -->
+        <div *ngIf="p.example" style="margin-top:40px">
+          <h2 style="margin:0 0 14px;font-size:22px;font-weight:700;letter-spacing:-0.01em">{{ t.detail_example }}</h2>
+          <div class="p-card" style="padding:22px;font-style:italic;color:var(--text-2);border-left:3px solid var(--accent)">
+            "{{ p.example }}"
+          </div>
+        </div>
+
+        <!-- Similar -->
+        <div *ngIf="similar.length > 0" style="margin-top:60px">
+          <h2 style="margin:0 0 20px;font-size:22px;font-weight:700;letter-spacing:-0.01em">{{ t.detail_similar }}</h2>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)">
+            <app-prompt-card *ngFor="let s of similar" [prompt]="s" [compact]="true"
+              [isFav]="state.favs().includes(s.id)"
+              (toggleFav)="handleToggleFav($event)"
+              (open)="handleOpen($event)"
+              (copy)="handleCopy($event)">
+            </app-prompt-card>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right sidebar -->
+      <aside style="position:sticky;top:90px;align-self:flex-start">
+        <div class="p-card" style="padding:20px">
+          <h4 class="text-label" style="margin:0 0 14px">{{ t.detail_llm_compat }}</h4>
+          <div class="stack" style="gap:10px">
+            <div *ngFor="let l of llms" class="row-between" style="font-size:13px">
+              <div class="row" style="gap:8px">
+                <span [style.width]="'20px'" [style.height]="'20px'" [style.border-radius]="'4px'"
+                  [style.background]="l.color"
+                  style="display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700">
+                  {{ getLlmInitial(l) }}
+                </span>
+                <span>{{ l.name }}</span>
+              </div>
+              <app-icon *ngIf="p.llm?.includes(l.id)" name="check" [size]="16" className="text-faint" [style.color]="'var(--accent)'"></app-icon>
+              <app-icon *ngIf="!p.llm?.includes(l.id)" name="close" [size]="14" className="text-faint"></app-icon>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-card" style="padding:20px;margin-top:14px">
+          <h4 class="text-label" style="margin:0 0 14px">{{ lang === 'ru' ? 'Автор' : 'Author' }}</h4>
+          <div class="row" style="gap:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--accent-soft);color:var(--accent-deep);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:16px">
+              {{ authorInitials() }}
+            </div>
+            <div style="flex:1">
+              <div style="font-weight:600;font-size:14px">{{ p.author }}</div>
+              <div class="text-dim" style="font-size:12px">{{ p.authorRole }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-card" style="padding:20px;margin-top:14px">
+          <h4 class="text-label" style="margin:0 0 14px">{{ lang === 'ru' ? 'Статистика' : 'Stats' }}</h4>
+          <div class="stack" style="gap:14px">
+            <div>
+              <div class="row-between" style="font-size:12px;margin-bottom:6px">
+                <span class="text-dim">{{ t.card_uses }}</span><b>{{ formatUses() }}</b>
+              </div>
+              <div class="gauge"><div class="gauge-fill" [style.width]="gaugeWidth(p.uses, 60)"></div></div>
+            </div>
+            <div>
+              <div class="row-between" style="font-size:12px;margin-bottom:6px">
+                <span class="text-dim">{{ t.card_saves }}</span><b>{{ p.saves?.toLocaleString('ru-RU') || 0 }}</b>
+              </div>
+              <div class="gauge"><div class="gauge-fill" [style.width]="gaugeWidth(p.saves || 0, 10)"></div></div>
+            </div>
+            <div>
+              <div class="row-between" style="font-size:12px;margin-bottom:6px">
+                <span class="text-dim">{{ lang === 'ru' ? 'Рейтинг' : 'Rating' }}</span><b>{{ p.rating }} / 5</b>
+              </div>
+              <div class="gauge"><div class="gauge-fill" [style.width]="((p.rating / 5) * 100) + '%'"></div></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>

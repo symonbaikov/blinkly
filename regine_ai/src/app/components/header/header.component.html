@@ -1,0 +1,64 @@
+<header class="site-header">
+  <div class="container" style="display:flex;align-items:center;gap:24px;padding:14px var(--pad-x)">
+    <div style="display:flex;align-items:center;gap:12px;cursor:pointer;flex-shrink:0" (click)="state.navigate({name:'catalog'})">
+      <img src="rengine-logo.png" alt="Rengine AI" style="width:64px;height:64px;object-fit:contain"/>
+      <div style="display:flex;flex-direction:column;line-height:1;white-space:nowrap">
+        <span style="font-weight:700;font-size:20px;letter-spacing:-0.02em">Rengine AI</span>
+        <span style="font-size:10px;letter-spacing:0.18em;color:var(--text-3);margin-top:4px">INDUSTRIAL HR · PROMPTS</span>
+      </div>
+    </div>
+
+    <nav class="desktop-only" style="display:flex;gap:4px;margin-left:12px;flex-shrink:0">
+      <div *ngFor="let link of ['browse','categories','about','submit']"
+        class="nav-link"
+        [class.active]="state.screen().name === link"
+        (click)="state.navigate({name:link})"
+        style="white-space:nowrap">
+        {{ getLinkLabel(link) }}
+      </div>
+    </nav>
+
+    <div style="flex:1"></div>
+
+    <button class="btn btn-sm desktop-only" (click)="state.navigate({name:'search'})"
+      style="min-width:200px;max-width:280px;justify-content:flex-start;color:var(--text-3);gap:10px;flex-shrink:1">
+      <app-icon name="search" [size]="15"></app-icon>
+      <span>{{ t.search_placeholder_short }}</span>
+      <span style="margin-left:auto;font-family:var(--font-mono);font-size:10px;padding:2px 6px;background:var(--surface-2);border-radius:4px;border:1px solid var(--border)">⌘K</span>
+    </button>
+
+    <div style="display:flex;gap:2px;padding:2px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border)">
+      <button *ngFor="let l of ['ru','en']"
+        (click)="setLang(l)"
+        [style.padding]="'4px 10px'"
+        [style.fontSize]="'12px'"
+        [style.fontWeight]="'600'"
+        [style.borderRadius]="'6px'"
+        [style.border]="'none'"
+        [style.cursor]="'pointer'"
+        [style.background]="state.lang() === l ? 'var(--surface)' : 'transparent'"
+        [style.color]="state.lang() === l ? 'var(--text)' : 'var(--text-3)'"
+        [style.letterSpacing]="'0.05em'">
+        {{ l.toUpperCase() }}
+      </button>
+    </div>
+
+    <button class="btn btn-sm btn-ghost" (click)="state.updateSettings({theme: state.settings().theme === 'dark' ? 'light' : 'dark'})" style="padding:8px">
+      <app-icon [name]="state.settings().theme === 'dark' ? 'sparkle' : 'dot'" [size]="16"></app-icon>
+    </button>
+
+    <button class="btn btn-sm btn-ghost" (click)="state.navigate({name:'favorites'})">
+      <app-icon name="bookmark" [size]="16"></app-icon>
+      <span *ngIf="state.favs().length > 0" style="font-size:11px;font-weight:600">{{ state.favs().length }}</span>
+    </button>
+
+    <button class="btn btn-sm btn-ghost desktop-only" (click)="state.navigate({name:'account'})">
+      <app-icon name="user" [size]="16"></app-icon>
+    </button>
+
+    <button class="btn btn-primary btn-sm" (click)="state.navigate({name:'submit'})">
+      <app-icon name="plus" [size]="14"></app-icon>
+      <span class="desktop-only">{{ t.add_prompt }}</span>
+    </button>
+  </div>
+</header>

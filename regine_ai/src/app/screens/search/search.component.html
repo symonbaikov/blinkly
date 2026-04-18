@@ -1,0 +1,44 @@
+<section style="padding:40px 0 80px">
+  <div class="container">
+    <div style="position:relative;margin-bottom:36px">
+      <input class="input" autofocus [placeholder]="t.search_placeholder" [(ngModel)]="query"
+        (ngModelChange)="onQueryChange()"
+        style="font-size:22px;padding:18px 20px 18px 56px;font-weight:500"/>
+      <div style="position:absolute;left:20px;top:50%;transform:translateY(-50%);color:var(--text-3)">
+        <app-icon name="search" [size]="20"></app-icon>
+      </div>
+    </div>
+
+    <!-- Skeletons while searching -->
+    <div *ngIf="loading" style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)">
+      <app-skeleton-card *ngFor="let s of skeletons"></app-skeleton-card>
+    </div>
+
+    <ng-container *ngIf="!loading">
+      <ng-container *ngIf="query; else noQuery">
+        <div *ngIf="results.length === 0" style="padding:60px 20px;text-align:center">
+          <h3 style="font-size:22px;margin:0">{{ t.search_no_results }}</h3>
+          <p class="text-dim" style="margin-top:8px">{{ t.search_try }}</p>
+        </div>
+        <ng-container *ngIf="results.length > 0">
+          <div class="text-dim" style="margin-bottom:24px">{{ t.search_results_for }} "{{ query }}" · {{ results.length }}</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)">
+            <app-prompt-card *ngFor="let p of results" [prompt]="p"
+              [isFav]="state.favs().includes(p.id)"
+              (toggleFav)="handleToggleFav($event)"
+              (open)="handleOpen($event)"
+              (copy)="handleCopy($event)">
+            </app-prompt-card>
+          </div>
+        </ng-container>
+      </ng-container>
+
+      <ng-template #noQuery>
+        <div class="text-label" style="color:var(--accent);margin-bottom:14px">{{ t.search_suggestions }}</div>
+        <div class="row" style="gap:8px;flex-wrap:wrap">
+          <button *ngFor="let s of suggestions" class="btn btn-sm" (click)="query = s; onQueryChange()">{{ s }}</button>
+        </div>
+      </ng-template>
+    </ng-container>
+  </div>
+</section>

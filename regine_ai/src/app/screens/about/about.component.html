@@ -1,0 +1,43 @@
+<section style="padding:40px 0 80px">
+  <div class="container">
+    <div class="text-label" style="color:var(--accent);margin-bottom:16px">{{ t.about_eyebrow }}</div>
+    <h1 class="display-xl" style="margin:0;max-width:900px;text-wrap:balance">{{ t.about_title }}</h1>
+    <p class="text-dim" style="font-size:19px;margin-top:24px;max-width:720px;line-height:1.5">{{ t.about_sub }}</p>
+    <div style="height:80px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px">
+      <div>
+        <h2 class="display-md" style="margin:0">{{ t.about_mission_title }}</h2>
+        <p class="text-dim" style="margin-top:18px;font-size:16px;line-height:1.6">{{ t.about_mission }}</p>
+      </div>
+      <div class="striped-placeholder" style="min-height:280px">
+        {{ lang === 'ru' ? 'ФОТО / ЦЕХ' : 'PHOTO / FACTORY FLOOR' }}
+      </div>
+    </div>
+    <div style="height:80px"></div>
+    <h2 class="display-md" style="margin:0">{{ t.about_how_title }}</h2>
+    <div style="margin-top:36px;display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)">
+      <div *ngFor="let s of steps" class="p-card" style="padding:28px">
+        <div class="big-letter" style="font-size:80px;color:var(--accent);opacity:0.9;margin-bottom:12px">{{ s.n }}</div>
+        <h3 style="margin:0;font-size:20px;font-weight:700">{{ s.t }}</h3>
+        <p class="text-dim" style="margin-top:10px;font-size:14px;line-height:1.6">{{ s.d }}</p>
+      </div>
+    </div>
+    <div style="height:80px"></div>
+    <div class="p-card" style="padding:48px;background:var(--accent-soft);border:none">
+      <h2 class="display-md" style="margin:0;color:var(--accent-deep)">
+        {{ lang === 'ru' ? 'Присоединяйтесь к сообществу' : 'Join the community' }}
+      </h2>
+      <p style="color:var(--accent-deep);margin-top:14px;font-size:16px;max-width:600px">
+        {{ lang === 'ru' ? '3400+ HR-специалистов уже используют Rengine AI.' : '3400+ HR specialists are already using Rengine AI.' }}
+      </p>
+      <div class="row" style="margin-top:24px;gap:10px">
+        <button class="btn btn-primary btn-lg" (click)="state.navigate({name:'browse'})">
+          {{ t.hero_cta_primary }} <app-icon name="arrow" [size]="16"></app-icon>
+        </button>
+        <button class="btn btn-lg" (click)="state.navigate({name:'submit'})" style="background:transparent">
+          {{ t.add_prompt }}
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

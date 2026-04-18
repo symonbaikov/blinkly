@@ -1,0 +1,61 @@
+<section style="padding:40px 0 80px">
+  <div class="container">
+    <div class="text-label" style="color:var(--accent);margin-bottom:12px">{{ t.nav_submit }}</div>
+    <h1 class="display-lg" style="margin:0 0 10px">{{ t.submit_title }}</h1>
+    <p class="text-dim" style="max-width:620px;font-size:16px;margin-bottom:40px">{{ t.submit_sub }}</p>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:32px">
+      <form class="stack" style="gap:20px" (ngSubmit)="onSubmit()">
+        <div>
+          <label class="text-label" style="display:block;margin-bottom:8px">{{ t.submit_name }}</label>
+          <input class="input" [placeholder]="t.submit_name_ph" [(ngModel)]="form.name" name="name"/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <label class="text-label" style="display:block;margin-bottom:8px">{{ t.submit_category }}</label>
+            <select class="input" [(ngModel)]="form.category" name="category">
+              <option value="">—</option>
+              <option *ngFor="let c of categories" [value]="c.id">{{ lang === 'ru' ? c.name : c.nameEn }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-label" style="display:block;margin-bottom:8px">{{ t.submit_level }}</label>
+            <select class="input" name="level">
+              <option value="basic">{{ t.level_basic }}</option>
+              <option value="intermediate" selected>{{ t.level_intermediate }}</option>
+              <option value="advanced">{{ t.level_advanced }}</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="text-label" style="display:block;margin-bottom:8px">{{ t.submit_desc }}</label>
+          <textarea class="input" rows="2" [placeholder]="t.submit_desc_ph" [(ngModel)]="form.desc" name="desc"></textarea>
+        </div>
+        <div>
+          <label class="text-label" style="display:block;margin-bottom:8px">{{ t.submit_prompt }}</label>
+          <textarea class="input" rows="10" [placeholder]="t.submit_prompt_ph" [(ngModel)]="form.prompt" name="prompt" style="font-family:var(--font-mono);font-size:13px"></textarea>
+        </div>
+        <div>
+          <label class="text-label" style="display:block;margin-bottom:8px">{{ t.submit_example }}</label>
+          <textarea class="input" rows="3" [placeholder]="t.submit_example_ph" [(ngModel)]="form.example" name="example"></textarea>
+        </div>
+        <div class="row" style="gap:10px">
+          <button type="submit" class="btn btn-primary btn-lg">{{ t.submit_submit }}</button>
+          <button type="button" class="btn btn-lg">{{ t.submit_draft }}</button>
+        </div>
+      </form>
+
+      <aside>
+        <div class="p-card" style="padding:24px;position:sticky;top:90px">
+          <h4 class="text-label" style="margin:0 0 16px">{{ t.submit_tip_title }}</h4>
+          <div class="stack" style="gap:14px">
+            <div *ngFor="let tip of tips(); let i = index" class="row" style="gap:10px;align-items:flex-start">
+              <span style="width:18px;height:18px;flex-shrink:0;border-radius:4px;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px">{{ i+1 }}</span>
+              <span style="font-size:13px;line-height:1.5">{{ tip }}</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>

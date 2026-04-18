@@ -1,0 +1,47 @@
+<footer class="site-footer">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <img src="rengine-logo.png" alt="Rengine AI" style="width:40px;height:40px;object-fit:contain"/>
+          <span style="font-weight:700;font-size:18px;letter-spacing:-0.02em">Rengine AI</span>
+        </div>
+        <p class="text-dim" style="font-size:14px;max-width:320px;margin:0">{{ t.footer_tagline }}</p>
+        <div class="row" style="margin-top:18px;gap:18px">
+          <span class="text-mono text-faint">v1.3.0</span>
+          <span class="text-mono text-faint">RU · EN</span>
+          <span class="text-mono text-faint">{{ year }}</span>
+        </div>
+      </div>
+      <div>
+        <h4 class="text-label" style="margin:0 0 12px">{{ t.footer_product }}</h4>
+        <div class="stack" style="gap:8px">
+          <a class="text-dim" (click)="state.navigate({name:'catalog'})" style="cursor:pointer">{{ t.nav_catalog }}</a>
+          <a class="text-dim" (click)="state.navigate({name:'categories'})" style="cursor:pointer">{{ t.nav_categories }}</a>
+          <a class="text-dim" (click)="state.navigate({name:'submit'})" style="cursor:pointer">{{ t.nav_submit }}</a>
+        </div>
+      </div>
+      <div>
+        <h4 class="text-label" style="margin:0 0 12px">{{ t.footer_company }}</h4>
+        <div class="stack" style="gap:8px">
+          <a class="text-dim" (click)="state.navigate({name:'about'})" style="cursor:pointer">{{ t.nav_about }}</a>
+          <a class="text-dim" style="cursor:pointer">{{ t.footer_team }}</a>
+          <a class="text-dim" style="cursor:pointer">{{ t.footer_contacts }}</a>
+        </div>
+      </div>
+      <div>
+        <h4 class="text-label" style="margin:0 0 12px">{{ t.footer_legal }}</h4>
+        <div class="stack" style="gap:8px">
+          <a class="text-dim" style="cursor:pointer">{{ t.footer_terms }}</a>
+          <a class="text-dim" style="cursor:pointer">{{ t.footer_privacy }}</a>
+          <a class="text-dim" style="cursor:pointer">{{ t.footer_license }}</a>
+        </div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="row-between" style="margin-top:24px">
+      <span class="text-mono text-faint">© {{ year }} Rengine AI. {{ t.footer_rights }}</span>
+      <span class="text-mono text-faint">{{ t.footer_made }}</span>
+    </div>
+  </div>
+</footer>

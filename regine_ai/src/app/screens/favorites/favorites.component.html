@@ -1,0 +1,29 @@
+<section style="padding:40px 0 80px">
+  <div class="container">
+    <div class="text-label" style="color:var(--accent);margin-bottom:12px">{{ t.favorites }}</div>
+    <h1 class="display-lg" style="margin:0 0 36px">{{ t.fav_title }}</h1>
+
+    <div *ngIf="!loading && saved.length === 0" class="p-card" style="padding:60px;text-align:center">
+      <div style="width:56px;height:56px;border-radius:14px;background:var(--surface-2);color:var(--text-3);display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px">
+        <app-icon name="bookmark" [size]="26"></app-icon>
+      </div>
+      <h3 style="margin:0;font-size:22px">{{ t.fav_empty_title }}</h3>
+      <p class="text-dim" style="margin-top:8px;max-width:420px;margin-left:auto;margin-right:auto">{{ t.fav_empty_sub }}</p>
+      <button class="btn btn-primary" style="margin-top:20px" (click)="state.navigate({name:'browse'})">
+        {{ t.fav_go }} <app-icon name="arrow" [size]="14"></app-icon>
+      </button>
+    </div>
+
+    <div *ngIf="loading" style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)">
+      <app-skeleton-card *ngFor="let s of skeletons"></app-skeleton-card>
+    </div>
+
+    <div *ngIf="!loading && saved.length > 0" style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)">
+      <app-prompt-card *ngFor="let p of saved" [prompt]="p" [isFav]="true"
+        (toggleFav)="handleToggleFav($event)"
+        (open)="handleOpen($event)"
+        (copy)="handleCopy($event)">
+      </app-prompt-card>
+    </div>
+  </div>
+</section>

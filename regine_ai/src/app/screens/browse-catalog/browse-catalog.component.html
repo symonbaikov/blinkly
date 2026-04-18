@@ -1,0 +1,130 @@
+<section style="padding:32px 0 80px">
+  <div class="container">
+    <div style="margin-bottom:28px">
+      <div class="text-label" style="color:var(--accent);margin-bottom:10px">Browse Catalog</div>
+      <h1 class="display-lg" style="margin:0;text-wrap:balance;max-width:760px">
+        {{ lang === 'ru' ? 'Библиотека промптов' : 'Prompt library' }}
+        <span style="color:var(--accent)">·</span>
+        <span class="text-dim" style="font-size:0.7em">{{ totalCount }} {{ lang === 'ru' ? 'шаблонов' : 'templates' }}</span>
+      </h1>
+    </div>
+
+    <!-- Search -->
+    <div style="position:relative;margin-bottom:20px">
+      <input class="input" [placeholder]="t.search_placeholder" [(ngModel)]="query" (ngModelChange)="onQueryChange()"
+        style="font-size:16px;padding:14px 18px 14px 48px;font-weight:500"/>
+      <div style="position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text-3)">
+        <app-icon name="search" [size]="18"></app-icon>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:260px 1fr;gap:32px;align-items:flex-start">
+
+      <!-- Sidebar -->
+      <aside class="side-nav">
+        <div class="row-between" style="margin-bottom:14px">
+          <h4 class="text-label" style="margin:0">{{ t.filter_category }}</h4>
+          <button *ngIf="hasActiveFilters()" (click)="clearAll()" class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px">{{ t.filter_clear }}</button>
+        </div>
+
+        <div class="side-nav-item" [class.active]="!filters.category" (click)="setFilter('category', null)">
+          <span style="display:inline-flex;align-items:center;gap:10px">
+            <app-icon name="grid" [size]="14"></app-icon>{{ t.filter_all }}
+          </span>
+          <span class="text-mono" style="font-size:11px;opacity:0.7">{{ totalCount }}</span>
+        </div>
+        <div *ngFor="let c of categories" class="side-nav-item" [class.active]="filters.category === c.id"
+          (click)="toggleFilter('category', c.id)">
+          <span style="display:inline-flex;align-items:center;gap:10px">
+            <app-icon [name]="c.icon" [size]="14"></app-icon>{{ lang === 'ru' ? c.name : c.nameEn }}
+          </span>
+          <span class="text-mono" style="font-size:11px;opacity:0.7">{{ catCount(c.id) }}</span>
+        </div>
+
+        <h4 class="text-label" style="margin:24px 0 10px">{{ t.filter_role }}</h4>
+        <div class="side-nav-item" [class.active]="!filters.role" (click)="setFilter('role', null)">
+          <span>{{ t.filter_all }}</span><span class="text-mono" style="font-size:11px;opacity:0.7">{{ totalCount }}</span>
+        </div>
+        <div *ngFor="let r of roles" class="side-nav-item" [class.active]="filters.role === r.id"
+          (click)="toggleFilter('role', r.id)">
+          <span>{{ lang === 'ru' ? r.name : r.nameEn }}</span>
+          <span class="text-mono" style="font-size:11px;opacity:0.7">{{ roleCount(r.id) }}</span>
+        </div>
+
+        <h4 class="text-label" style="margin:24px 0 10px">{{ t.filter_llm }}</h4>
+        <div class="side-nav-item" [class.active]="!filters.llm" (click)="setFilter('llm', null)">
+          <span>{{ t.filter_all }}</span><span class="text-mono" style="font-size:11px;opacity:0.7">{{ totalCount }}</span>
+        </div>
+        <div *ngFor="let l of llms" class="side-nav-item" [class.active]="filters.llm === l.id"
+          (click)="toggleFilter('llm', l.id)">
+          <span>{{ l.name }}</span><span class="text-mono" style="font-size:11px;opacity:0.7">{{ llmCount(l.id) }}</span>
+        </div>
+
+        <h4 class="text-label" style="margin:24px 0 10px">{{ t.filter_level }}</h4>
+        <div *ngFor="let lv of levels" class="side-nav-item" [class.active]="filters.level === lv"
+          (click)="toggleFilter('level', lv)">
+          <span>{{ $any(t)['level_' + lv] }}</span>
+          <span class="text-mono" style="font-size:11px;opacity:0.7">{{ levelCount(lv) }}</span>
+        </div>
+
+        <h4 class="text-label" style="margin:24px 0 10px">{{ t.filter_type }}</h4>
+        <div class="side-nav-item" [class.active]="filters.access === 'free'" (click)="toggleFilter('access', 'free')">
+          <span>{{ t.card_free }}</span><span class="text-mono" style="font-size:11px;opacity:0.7">{{ freeCount }}</span>
+        </div>
+        <div class="side-nav-item" [class.active]="filters.access === 'premium'" (click)="toggleFilter('access', 'premium')">
+          <span>{{ t.card_premium }}</span><span class="text-mono" style="font-size:11px;opacity:0.7">{{ premiumCount }}</span>
+        </div>
+
+        <div class="p-card" style="margin-top:24px;padding:16px;background:var(--accent-soft);border:none">
+          <div class="text-label" style="color:var(--accent-deep);margin-bottom:8px">PREMIUM</div>
+          <div style="font-size:13px;line-height:1.5;color:var(--accent-deep)">
+            {{ lang === 'ru' ? 'Разблокируйте все промпты от HRD промышленных компаний' : 'Unlock all prompts from industrial HRDs' }}
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:12px;width:100%">{{ t.upgrade_cta }}</button>
+        </div>
+      </aside>
+
+      <!-- Content -->
+      <div>
+        <div class="row-between" style="margin-bottom:20px">
+          <div class="text-dim" style="font-size:14px">
+            {{ prompts.length }} {{ lang === 'ru' ? 'результат' : 'results' }}
+            <ng-container *ngIf="filters.category">
+              · <b style="color:var(--text)">{{ getActiveCategoryName() }}</b>
+            </ng-container>
+          </div>
+          <div class="row" style="gap:8px">
+            <span class="text-label">{{ t.filter_sort }}</span>
+            <select class="input" [(ngModel)]="sort" (ngModelChange)="onSortChange()" style="width:auto;padding:6px 10px">
+              <option value="popular">{{ t.sort_popular }}</option>
+              <option value="recent">{{ t.sort_recent }}</option>
+              <option value="rated">{{ t.sort_rated }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Skeleton while loading -->
+        <div *ngIf="loading" style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gap)">
+          <app-skeleton-card *ngFor="let s of skeletons"></app-skeleton-card>
+        </div>
+
+        <ng-container *ngIf="!loading">
+          <div *ngIf="prompts.length === 0" class="p-card" style="padding:80px 40px;text-align:center">
+            <h3 style="font-size:22px;margin:0">{{ t.search_no_results }}</h3>
+            <p class="text-dim" style="margin-top:8px">{{ t.search_try }}</p>
+            <button class="btn btn-primary" style="margin-top:16px" (click)="clearAll()">{{ t.filter_clear }}</button>
+          </div>
+          <div *ngIf="prompts.length > 0" style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--gap)">
+            <app-prompt-card *ngFor="let p of prompts"
+              [prompt]="p"
+              [isFav]="state.favs().includes(p.id)"
+              (toggleFav)="handleToggleFav($event)"
+              (open)="handleOpen($event)"
+              (copy)="handleCopy($event)">
+            </app-prompt-card>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</section>

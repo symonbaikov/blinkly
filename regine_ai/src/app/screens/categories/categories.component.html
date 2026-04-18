@@ -1,0 +1,22 @@
+<section style="padding:40px 0 80px">
+  <div class="container">
+    <div class="text-label" style="color:var(--accent);margin-bottom:12px">{{ t.nav_categories }}</div>
+    <h1 class="display-lg" style="margin:0 0 40px">{{ lang === 'ru' ? 'Этапы рекрутинга' : 'Recruiting stages' }}</h1>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)">
+      <div *ngFor="let c of categories"
+        class="p-card p-card-interactive"
+        (click)="state.navigate({name:'category',id:c.id})"
+        style="min-height:200px;display:flex;flex-direction:column;gap:14px">
+        <div style="width:48px;height:48px;border-radius:10px;background:var(--surface-2);color:var(--accent);display:inline-flex;align-items:center;justify-content:center">
+          <app-icon [name]="c.icon" [size]="26"></app-icon>
+        </div>
+        <h3 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.01em">{{ lang === 'ru' ? c.name : c.nameEn }}</h3>
+        <div style="flex:1"></div>
+        <div class="row-between">
+          <span class="text-mono text-faint">{{ getCount(c.id) }} {{ lang === 'ru' ? 'промптов' : 'prompts' }}</span>
+          <app-icon name="arrow" [size]="16" className="text-faint"></app-icon>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

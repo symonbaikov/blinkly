@@ -1,0 +1,40 @@
+<section style="padding:40px 0 80px">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:40px">
+      <aside>
+        <div class="p-card" style="padding:24px;text-align:center">
+          <div style="width:72px;height:72px;border-radius:50%;background:var(--accent-soft);color:var(--accent-deep);display:inline-flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:0 auto 14px">АВ</div>
+          <h3 style="margin:0">{{ lang === 'ru' ? 'Анна Волкова' : 'Anna Volkova' }}</h3>
+          <div class="text-dim" style="font-size:13px;margin-top:4px">{{ lang === 'ru' ? 'HR-специалист' : 'HR specialist' }}</div>
+          <div class="divider" style="margin:18px 0"></div>
+          <div class="stack" style="gap:10px;text-align:left">
+            <div class="row-between">
+              <span class="text-dim" style="font-size:13px">{{ t.favorites }}</span>
+              <b>{{ state.favs().length }}</b>
+            </div>
+            <div class="row-between">
+              <span class="text-dim" style="font-size:13px">{{ t.my_history }}</span>
+              <b>{{ state.favs().length * 3 + 12 }}</b>
+            </div>
+            <div class="row-between">
+              <span class="text-dim" style="font-size:13px">{{ t.my_subscription }}</span>
+              <span class="premium-badge"><app-icon name="lightning" [size]="10"></app-icon>Premium</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <div>
+        <h1 class="display-md" style="margin:0 0 20px">{{ t.account_title }}</h1>
+        <h3 style="font-size:18px;margin:0 0 14px">{{ t.favorites }}</h3>
+        <p *ngIf="saved.length === 0" class="text-dim">{{ t.fav_empty_sub }}</p>
+        <div *ngIf="saved.length > 0" class="stack" style="gap:12px">
+          <app-prompt-card *ngFor="let p of saved" [prompt]="p" [compact]="true" [isFav]="true"
+            (toggleFav)="handleToggleFav($event)"
+            (open)="handleOpen($event)"
+            (copy)="handleCopy($event)">
+          </app-prompt-card>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,34 @@
+<section *ngIf="cat" style="padding:40px 0 80px">
+  <div class="container">
+    <button class="btn btn-ghost btn-sm" (click)="state.navigate({name:'browse'})" style="margin-bottom:20px;color:var(--text-3)">
+      <app-icon name="arrowLeft" [size]="14"></app-icon> {{ lang === 'ru' ? 'К каталогу' : 'Back to catalog' }}
+    </button>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:40px;margin-bottom:48px;align-items:center">
+      <div>
+        <div class="text-label" style="color:var(--accent);margin-bottom:12px">{{ t.cat_title }}</div>
+        <h1 class="display-lg" style="margin:0">{{ lang === 'ru' ? cat.name : cat.nameEn }}</h1>
+        <p class="text-dim" style="margin-top:16px;font-size:16px;max-width:520px;line-height:1.5">
+          {{ prompts.length }} {{ t.cat_prompts }}
+        </p>
+      </div>
+      <div style="display:flex;justify-content:flex-end">
+        <div style="width:200px;height:200px;border-radius:16px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center">
+          <app-icon [name]="cat.icon" [size]="96"></app-icon>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)">
+      <ng-container *ngIf="loading">
+        <app-skeleton-card *ngFor="let s of skeletons"></app-skeleton-card>
+      </ng-container>
+      <ng-container *ngIf="!loading">
+        <app-prompt-card *ngFor="let p of prompts" [prompt]="p"
+          [isFav]="state.favs().includes(p.id)"
+          (toggleFav)="handleToggleFav($event)"
+          (open)="handleOpen($event)"
+          (copy)="handleCopy($event)">
+        </app-prompt-card>
+      </ng-container>
+    </div>
+  </div>
+</section>

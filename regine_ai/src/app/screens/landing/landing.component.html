@@ -1,0 +1,176 @@
+<!-- Hero -->
+<section class="hero-bg" style="padding:80px 0 60px;position:relative;overflow:hidden">
+  <div class="container">
+    <div style="max-width:980px">
+      <div class="text-label" style="color:var(--accent);margin-bottom:20px;display:inline-flex;align-items:center;gap:8px">
+        <span style="width:24px;height:1px;background:var(--accent)"></span>
+        {{ t.hero_eyebrow }}
+      </div>
+      <h1 class="display-xl" style="margin:0;text-wrap:balance">
+        {{ t.hero_title_1 }} <span style="color:var(--accent)">{{ t.hero_title_2 }}</span> {{ t.hero_title_3 }}
+      </h1>
+      <p class="text-dim" style="font-size:18px;line-height:1.5;max-width:640px;margin-top:24px;text-wrap:pretty">
+        {{ t.hero_sub }}
+      </p>
+      <div class="row" style="gap:12px;margin-top:32px">
+        <button class="btn btn-primary btn-lg" (click)="state.navigate({name:'browse'})">
+          Browse Catalog <app-icon name="arrow" [size]="16"></app-icon>
+        </button>
+        <button class="btn btn-lg" (click)="state.navigate({name:'about'})">{{ t.hero_cta_secondary }}</button>
+      </div>
+    </div>
+
+    <div style="margin-top:80px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+      <div *ngFor="let s of stats; let i = index"
+        [style.padding]="'28px 24px'"
+        [style.border-right]="i < 3 ? '1px solid var(--border)' : 'none'">
+        <div class="stat-big">{{ s.v }}</div>
+        <div class="text-dim" style="font-size:13px;margin-top:6px">{{ s.l }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Ticker -->
+<div class="ticker hide-scroll">
+  <div class="marquee">
+    <span *ngFor="let item of tickerItems(); let i = index" class="ticker-item">
+      <span class="ticker-dot"></span>{{ item }}
+    </span>
+  </div>
+</div>
+
+<!-- Category Grid -->
+<section style="padding:80px 0">
+  <div class="container">
+    <div class="row-between" style="margin-bottom:36px;align-items:flex-end">
+      <div>
+        <div class="text-label" style="color:var(--accent);margin-bottom:12px">{{ t.section_categories }}</div>
+        <h2 class="display-lg" style="margin:0;max-width:600px;text-wrap:balance">{{ t.section_categories_sub }}</h2>
+      </div>
+      <button class="btn" (click)="state.navigate({name:'categories'})">
+        {{ lang === 'ru' ? 'Все категории' : 'All categories' }} <app-icon name="arrow" [size]="14"></app-icon>
+      </button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)">
+      <div *ngFor="let c of categories; let i = index"
+        class="p-card p-card-interactive"
+        (click)="navigateToCategory(c.id)"
+        [style.background]="i === 0 ? 'var(--accent-soft)' : 'var(--surface)'"
+        style="min-height:180px;display:flex;flex-direction:column;gap:16px">
+        <div [style.width]="'44px'" [style.height]="'44px'" [style.border-radius]="'10px'"
+          [style.background]="i === 0 ? 'var(--accent)' : 'var(--surface-2)'"
+          [style.color]="i === 0 ? '#fff' : 'var(--accent)'"
+          style="display:inline-flex;align-items:center;justify-content:center">
+          <app-icon [name]="c.icon" [size]="22"></app-icon>
+        </div>
+        <h3 [style.color]="i === 0 ? 'var(--accent-deep)' : 'var(--text)'"
+          style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.01em">
+          {{ lang === 'ru' ? c.name : c.nameEn }}
+        </h3>
+        <div style="flex:1"></div>
+        <div class="row-between">
+          <span class="text-mono text-faint">{{ ('' + getCategoryCount(c.id)).padStart(2,'0') }} {{ lang === 'ru' ? 'промптов' : 'prompts' }}</span>
+          <app-icon name="arrow" [size]="16" className="text-faint"></app-icon>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Featured -->
+<section id="featured" style="padding:40px 0 80px">
+  <div class="container">
+    <div class="row-between" style="margin-bottom:28px;align-items:flex-end">
+      <div>
+        <div class="text-label" style="color:var(--accent);margin-bottom:12px">{{ t.section_featured }}</div>
+        <h2 class="display-lg" style="margin:0">{{ t.section_featured_sub }}</h2>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)">
+      <ng-container *ngIf="loading">
+        <app-skeleton-card *ngFor="let s of skeletons"></app-skeleton-card>
+      </ng-container>
+      <ng-container *ngIf="!loading">
+        <app-prompt-card *ngFor="let p of featured"
+          [prompt]="p"
+          [isFav]="state.favs().includes(p.id)"
+          (toggleFav)="handleToggleFav($event)"
+          (open)="handleOpen($event)"
+          (copy)="handleCopy($event)">
+        </app-prompt-card>
+      </ng-container>
+    </div>
+  </div>
+</section>
+
+<!-- Roles Band -->
+<section style="padding:80px 0;background:var(--bg-soft)">
+  <div class="container">
+    <div class="row-between" style="margin-bottom:36px;align-items:flex-end">
+      <div>
+        <div class="text-label" style="color:var(--accent);margin-bottom:12px">{{ t.section_by_role }}</div>
+        <h2 class="display-lg" style="margin:0;max-width:560px;text-wrap:balance">{{ t.section_by_role_sub }}</h2>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)">
+      <div *ngFor="let r of roles; let i = index"
+        class="p-card p-card-interactive"
+        (click)="navigateToRoleBrowse(r.id)"
+        style="display:flex;align-items:center;gap:16px;padding:20px 22px">
+        <div style="width:40px;height:40px;border-radius:8px;background:var(--surface-2);display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;color:var(--accent);letter-spacing:-0.02em">
+          {{ ('' + (i+1)).padStart(2,'0') }}
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:15px">{{ lang === 'ru' ? r.name : r.nameEn }}</div>
+          <div class="text-mono text-faint" style="margin-top:2px">{{ getRoleCount(r.id) }} {{ lang === 'ru' ? 'промптов' : 'prompts' }}</div>
+        </div>
+        <app-icon name="arrow" [size]="18" className="text-faint"></app-icon>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section style="padding:80px 0">
+  <div class="container">
+    <div class="row-between" style="margin-bottom:36px;align-items:flex-end">
+      <div>
+        <div class="text-label" style="color:var(--accent);margin-bottom:12px">{{ t.section_how }}</div>
+        <h2 class="display-lg" style="margin:0">{{ t.section_how_sub }}</h2>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--border)">
+      <div *ngFor="let s of howSteps(); let i = index"
+        [style.border-right]="i < 2 ? '1px solid var(--border)' : 'none'"
+        style="padding:32px 28px;border-bottom:1px solid var(--border)">
+        <div class="row-between" style="margin-bottom:24px">
+          <span class="big-letter" style="font-size:64px;color:var(--accent);opacity:0.8">{{ s.n }}</span>
+          <app-icon [name]="s.icon" [size]="22" className="text-faint"></app-icon>
+        </div>
+        <h3 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.01em">{{ s.t }}</h3>
+        <p class="text-dim" style="margin-top:10px;font-size:14px;line-height:1.6">{{ s.d }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Upgrade Band -->
+<section style="padding:60px 0">
+  <div class="container">
+    <div class="p-card" style="padding:48px;background:var(--surface-2);border:1px solid var(--border-strong);display:grid;grid-template-columns:2fr 1fr;gap:40px;align-items:center">
+      <div>
+        <div class="text-label" style="color:var(--accent);margin-bottom:12px">PREMIUM</div>
+        <h2 class="display-md" style="margin:0">{{ t.upgrade_title }}</h2>
+        <p class="text-dim" style="margin-top:14px;font-size:15px;line-height:1.6;max-width:520px">{{ t.upgrade_sub }}</p>
+      </div>
+      <div style="text-align:right">
+        <div class="display-md" style="margin:0;color:var(--accent)">{{ t.upgrade_price }}</div>
+        <button class="btn btn-primary btn-lg" style="margin-top:16px">
+          {{ t.upgrade_cta }} <app-icon name="arrow" [size]="16"></app-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

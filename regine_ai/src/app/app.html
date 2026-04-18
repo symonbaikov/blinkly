@@ -1,0 +1,19 @@
+<app-header></app-header>
+
+<main class="screen-fade" [attr.data-screen-label]="screen.name">
+  <app-landing *ngIf="screen.name === 'catalog'"></app-landing>
+  <app-browse-catalog *ngIf="screen.name === 'browse'"></app-browse-catalog>
+  <app-categories *ngIf="screen.name === 'categories'"></app-categories>
+  <app-category *ngIf="screen.name === 'category'"></app-category>
+  <app-detail *ngIf="screen.name === 'prompt'"></app-detail>
+  <app-about *ngIf="screen.name === 'about'"></app-about>
+  <app-favorites *ngIf="screen.name === 'favorites'"></app-favorites>
+  <app-account *ngIf="screen.name === 'account'"></app-account>
+  <app-submit *ngIf="screen.name === 'submit'"></app-submit>
+  <app-search *ngIf="screen.name === 'search'"></app-search>
+</main>
+
+<app-footer></app-footer>
+<app-tweaks-panel></app-tweaks-panel>
+
+<div *ngIf="state.toast()" class="toast">{{ state.toast() }}</div>

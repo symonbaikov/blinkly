@@ -1,0 +1,71 @@
+<ng-container *ngIf="state.tweaksOpen(); else collapsed">
+  <div class="tweaks-panel">
+    <div class="row-between" style="margin-bottom:16px">
+      <div style="font-weight:700;letter-spacing:-0.01em;font-size:15px">Tweaks</div>
+      <button (click)="state.tweaksOpen.set(false)" class="btn btn-ghost btn-sm" style="padding:4px">
+        <app-icon name="close" [size]="14"></app-icon>
+      </button>
+    </div>
+
+    <div class="tweaks-row">
+      <h4>Variant</h4>
+      <div class="tweaks-btns">
+        <button *ngFor="let v of variants" [class.active]="state.settings().variant === v" (click)="update('variant', v)">{{ v }}</button>
+      </div>
+    </div>
+
+    <div class="tweaks-row">
+      <h4>Theme</h4>
+      <div class="tweaks-btns">
+        <button [class.active]="state.settings().theme === 'light'" (click)="update('theme', 'light')">Light</button>
+        <button [class.active]="state.settings().theme === 'dark'" (click)="update('theme', 'dark')">Dark</button>
+      </div>
+    </div>
+
+    <div class="tweaks-row">
+      <h4>Font</h4>
+      <div class="tweaks-btns">
+        <button *ngFor="let f of fonts" [class.active]="state.settings().font === f.id" (click)="update('font', f.id)">{{ f.label }}</button>
+      </div>
+    </div>
+
+    <div class="tweaks-row">
+      <h4>Accent</h4>
+      <div class="tweaks-btns">
+        <button *ngFor="let a of accents"
+          [class.active]="state.settings().accent === a.id"
+          (click)="update('accent', a.id)"
+          [style.background]="a.color"
+          [style.border]="state.settings().accent === a.id ? '2px solid var(--text)' : '1px solid var(--border)'"
+          [style.height]="'30px'" [style.flex]="'1'"
+          [title]="a.id">
+        </button>
+      </div>
+    </div>
+
+    <div class="tweaks-row">
+      <h4>Density</h4>
+      <div class="tweaks-btns">
+        <button *ngFor="let d of densities" [class.active]="state.settings().density === d" (click)="update('density', d)">{{ d }}</button>
+      </div>
+    </div>
+
+    <div class="tweaks-row">
+      <h4>Card style</h4>
+      <div class="tweaks-btns">
+        <button *ngFor="let c of cardstyles" [class.active]="state.settings().cardstyle === c" (click)="update('cardstyle', c)">{{ c }}</button>
+      </div>
+    </div>
+
+    <div style="padding:10px 0;font-size:11px;color:var(--text-3);border-top:1px solid var(--border);margin-top:8px;text-align:center">
+      Rengine AI · design tweaks
+    </div>
+  </div>
+</ng-container>
+
+<ng-template #collapsed>
+  <button (click)="state.tweaksOpen.set(true)"
+    style="position:fixed;right:20px;bottom:20px;z-index:9999;padding:10px 14px;border-radius:10px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 12px 30px rgba(0,0,0,0.2)">
+    <app-icon name="sliders" [size]="14"></app-icon> Tweaks
+  </button>
+</ng-template>
