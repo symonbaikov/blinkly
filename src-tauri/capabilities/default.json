@@ -3,5 +3,14 @@
   "identifier": "default",
   "description": "Capability for all app windows",
   "windows": ["overlay", "prompt", "settings"],
-  "permissions": ["core:default", "opener:default", "updater:default", "process:default"]
+  "permissions": [
+    "core:default",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-hide",
+    "core:window:allow-close",
+    "opener:default",
+    "updater:default",
+    "process:default"
+  ]
 }

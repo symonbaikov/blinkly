@@ -1,6 +1,59 @@
 import { useMemo, useState } from "react";
 import { useTauriEvents } from "../hooks/useTauriEvents";
 import { useSchedulerStore } from "../stores/useSchedulerStore";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+
+function WindowControls() {
+  const window = getCurrentWebviewWindow();
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        onClick={() => window.minimize()}
+        className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center cursor-pointer"
+        aria-label="Minimize"
+        style={{ pointerEvents: "auto" }}
+      >
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <rect x="1" y="4.5" width="8" height="1" fill="currentColor" />
+        </svg>
+      </button>
+      <button
+        onClick={() => window.toggleMaximize()}
+        className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center cursor-pointer"
+        aria-label="Maximize"
+        style={{ pointerEvents: "auto" }}
+      >
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <rect
+            x="1"
+            y="1"
+            width="8"
+            height="8"
+            stroke="currentColor"
+            strokeWidth="1"
+            fill="none"
+          />
+        </svg>
+      </button>
+      <button
+        onClick={() => window.hide()}
+        className="w-6 h-6 rounded-full bg-white/10 hover:bg-red-500/80 transition-colors flex items-center justify-center cursor-pointer"
+        aria-label="Close"
+        style={{ pointerEvents: "auto" }}
+      >
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path
+            d="M1 1L9 9M9 1L1 9"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+    </div>
+  );
+}
 
 function formatCountdown(totalSecs: number) {
   const mins = Math.floor(totalSecs / 60);
@@ -30,18 +83,19 @@ export default function PromptWindow() {
 
   return (
     <div
-      className="h-screen w-screen overflow-hidden"
+      className="h-screen w-screen overflow-hidden bg-[#1a1340] text-white"
       style={{
         fontFamily: "'Nunito', sans-serif",
-        background: "transparent",
         opacity: isPromptVisible ? 1 : 0,
-        pointerEvents: isPromptVisible ? "auto" : "none",
         transition: "opacity 220ms ease",
       }}
     >
-      <div className="absolute inset-0 flex items-start justify-center pt-4 px-4">
-        <div className="w-full max-w-[460px] rounded-[28px] border border-white/15 bg-[#201a57]/78 shadow-[0_25px_90px_rgba(13,10,45,0.55)] backdrop-blur-2xl px-4 py-3 text-white">
-          <div className="absolute inset-0 rounded-[28px] bg-[radial-gradient(circle_at_top_left,rgba(255,116,188,0.22),transparent_36%),radial-gradient(circle_at_top_right,rgba(100,170,255,0.28),transparent_42%)] pointer-events-none" />
+      <div className="absolute inset-0 flex flex-col px-5 py-4">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,116,188,0.18),transparent_38%),radial-gradient(circle_at_top_right,rgba(100,170,255,0.22),transparent_44%)] pointer-events-none" />
+
+        <div className="relative flex items-center justify-end mb-2">
+          <WindowControls />
+        </div>
 
           <div className="relative flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-pink-400 via-pink-500 to-orange-300 shadow-[0_10px_28px_rgba(255,95,175,0.35)]">
@@ -100,7 +154,6 @@ export default function PromptWindow() {
               );
             })}
           </div>
-        </div>
       </div>
     </div>
   );
