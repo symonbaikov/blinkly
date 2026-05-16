@@ -4,7 +4,7 @@ use tauri::{
     image::Image,
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, Runtime,
+    AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder,
 };
 use tokio::sync::broadcast;
 
@@ -37,6 +37,45 @@ const ID_BREAK_NOW: &str = "break_now";
 const ID_SETTINGS: &str = "settings";
 const ID_STATS: &str = "stats";
 const ID_QUIT: &str = "quit";
+
+// ---------------------------------------------------------------------------
+// Settings window — built on demand
+// ---------------------------------------------------------------------------
+
+/// Show the settings window, creating it fresh if it does not exist.
+///
+/// The window is intentionally *not* declared in `tauri.conf.json`. On
+/// GNOME/Wayland a pre-created hidden window that is later shown/hidden has
+/// its xdg-toplevel decoration de-activated by the compositor, leaving the
+/// minimize/maximize/close buttons unresponsive. Building it on demand (and
+/// letting it fully close, see the window event handler) keeps the WM frame
+/// interactive every time it is opened.
+fn open_settings<R: Runtime>(app: &AppHandle<R>) {
+    if let Some(window) = app.get_webview_window("settings") {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+        return;
+    }
+
+    match WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("index.html".into()))
+        .title("Blinkly — Settings")
+        .inner_size(780.0, 580.0)
+        .min_inner_size(680.0, 480.0)
+        .resizable(true)
+        .decorations(true)
+        .center()
+        .skip_taskbar(false)
+        .build()
+    {
+        Ok(window) => {
+            let _ = window.set_focus();
+        }
+        Err(error) => {
+            tracing::warn!("Failed to build settings window: {error}");
+        }
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Build the initial tray
@@ -143,17 +182,11 @@ fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, scheduler: &Arc<TimerSchedu
         }
         ID_SETTINGS => {
             tracing::info!("Tray: open settings");
-            if let Some(window) = app.get_webview_window("settings") {
-                let _ = window.show();
-                let _ = window.set_focus();
-            }
+            open_settings(app);
         }
         ID_STATS => {
             tracing::info!("Tray: open stats (via settings window)");
-            if let Some(window) = app.get_webview_window("settings") {
-                let _ = window.show();
-                let _ = window.set_focus();
-            }
+            open_settings(app);
         }
         ID_QUIT => {
             tracing::info!("Tray: quit");

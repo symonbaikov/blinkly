@@ -156,15 +156,10 @@ pub fn run() {
                 });
             }
 
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                // Hide the window instead of destroying it so it can be
-                // reopened from the tray without recreating it.
-                let label = window.label();
-                if label == "settings" {
-                    let _ = window.hide();
-                    api.prevent_close();
-                }
-            }
+            // The settings window is built on demand from the tray (see
+            // `tray::open_settings`). We let it fully close/destroy here:
+            // hiding + reusing it on GNOME/Wayland leaves the window-manager
+            // decoration buttons unresponsive after the first reopen.
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_config,
