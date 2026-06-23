@@ -17,8 +17,10 @@ export default function TimersPage({ draft, update }: TimersPageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Timers</h2>
-        <p className="text-sm text-gray-500 mt-1">Configure work and break intervals</p>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Timers</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Configure work and break intervals
+        </p>
       </div>
 
       <div className="space-y-5">

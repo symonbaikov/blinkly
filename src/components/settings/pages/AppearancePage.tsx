@@ -10,13 +10,15 @@ export default function AppearancePage({ draft, update }: AppearancePageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Appearance</h2>
-        <p className="text-sm text-gray-500 mt-1">Theme and startup preferences</p>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Appearance</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Theme and startup preferences
+        </p>
       </div>
 
       {/* Theme */}
       <div className="space-y-3">
-        <p className="text-sm font-medium text-gray-800">Theme</p>
+        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Theme</p>
         <div className="flex gap-2">
           {(["light", "dark", "system"] as Theme[]).map((t) => (
             <button
@@ -25,7 +27,7 @@ export default function AppearancePage({ draft, update }: AppearancePageProps) {
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium capitalize transition-colors ${
                 draft.theme === t
                   ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
             >
               {t}

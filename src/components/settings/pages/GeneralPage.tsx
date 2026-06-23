@@ -53,14 +53,16 @@ export default function GeneralPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">General</h2>
-        <p className="text-sm text-gray-500 mt-1">Current timer status and controls</p>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">General</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Current timer status and controls
+        </p>
       </div>
 
       {/* Status card */}
-      <div className="bg-gray-50 rounded-xl p-5 space-y-4">
+      <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-5 space-y-4 transition-colors">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600">Status</span>
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Status</span>
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${stateColors[state]}`}>
             {stateLabels[state]}
           </span>
@@ -68,8 +70,10 @@ export default function GeneralPage() {
 
         {(state === "working" || state === "on_break") && (
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-600">Time remaining</span>
-            <span className="text-2xl font-semibold text-gray-900 tabular-nums">
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Time remaining
+            </span>
+            <span className="text-2xl font-semibold text-gray-900 dark:text-white tabular-nums">
               {fmtTime(remaining)}
             </span>
           </div>
@@ -77,8 +81,10 @@ export default function GeneralPage() {
 
         {state === "paused" && (
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-600">Paused with</span>
-            <span className="text-2xl font-semibold text-gray-900 tabular-nums">
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Paused with
+            </span>
+            <span className="text-2xl font-semibold text-gray-900 dark:text-white tabular-nums">
               {fmtTime(remaining)}
             </span>
           </div>
@@ -98,8 +104,8 @@ export default function GeneralPage() {
       </div>
 
       {/* Info */}
-      <div className="bg-blue-50 rounded-xl p-4">
-        <p className="text-sm text-blue-700">
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 transition-colors">
+        <p className="text-sm text-blue-700 dark:text-blue-300">
           Blinkly follows the 20-20-20 rule: every 20 minutes, look at something 20 feet away for 20
           seconds. This helps reduce eye strain during long work sessions.
         </p>

@@ -1,6 +1,8 @@
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use tokio::sync::broadcast;
+
 use crate::config::AppConfig;
 use crate::events::{AppEvent, EventBus};
 use crate::platform::ActivitySource;
@@ -44,6 +46,23 @@ impl ActivityTracker {
         let source = Arc::clone(&self.source);
         let bus = Arc::clone(&self.bus);
         let config = Arc::clone(&self.config);
+
+        // Spawn a small listener for config updates so idle_threshold changes
+        // take effect without waiting for the next poll interval.
+        let config_for_events = Arc::clone(&config);
+        let mut rx = bus.subscribe();
+        crate::spawn_async(async move {
+            loop {
+                match rx.recv().await {
+                    Ok(AppEvent::ConfigUpdated(cfg)) => {
+                        *config_for_events.lock().unwrap() = cfg;
+                        tracing::info!("ActivityTracker: config updated");
+                    }
+                    Err(broadcast::error::RecvError::Closed) => break,
+                    _ => {}
+                }
+            }
+        });
 
         crate::spawn_async(async move {
             let mut was_idle = false;

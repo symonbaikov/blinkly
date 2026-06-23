@@ -5,7 +5,7 @@ use std::time::Duration;
 use crate::config::AppConfig;
 use crate::events::{AppEvent, BreakType, EventBus, SchedulerState};
 
-const PRE_BREAK_PROMPT_SECS: u64 = 32;
+const PRE_BREAK_PROMPT_SECS: u64 = 0;
 
 // ---------------------------------------------------------------------------
 // Port (trait)
@@ -287,7 +287,7 @@ impl TimerScheduler {
                     let mut g = inner_t.lock().unwrap();
                     g.remaining_secs = remaining;
 
-                    if remaining <= PRE_BREAK_PROMPT_SECS {
+                    if remaining > 0 && remaining <= PRE_BREAK_PROMPT_SECS {
                         let break_type = g.pending_break_type.clone().unwrap_or_else(|| {
                             let next = g.next_break_type();
                             g.pending_break_type = Some(next.clone());
@@ -818,13 +818,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn scheduler_emits_prompt_before_break_and_can_defer() {
+    async fn scheduler_does_not_emit_pre_break_prompt() {
         time::pause();
         let cfg = AppConfig {
-            work_interval_secs: 35,
-            break_duration_secs: 2,
-            long_break_interval_secs: 70,
-            long_break_duration_secs: 4,
+            work_interval_secs: 4,
+            break_duration_secs: 1,
+            long_break_interval_secs: 8,
+            long_break_duration_secs: 2,
             ..AppConfig::default()
         };
         let (sched, bus) = make(cfg);
@@ -833,36 +833,25 @@ mod tests {
         sched.start();
         rx.recv().await.unwrap(); // StateChanged(Working)
 
-        time::advance(Duration::from_secs(4)).await;
+        time::advance(Duration::from_secs(5)).await;
         tokio::task::yield_now().await;
 
-        let mut saw_prompt = false;
-        for _ in 0..4 {
+        let mut saw_break_due = false;
+        for _ in 0..8 {
             let ev = rx.recv().await.unwrap();
-            if matches!(
-                ev,
-                AppEvent::PreBreakPromptTick {
+            match ev {
+                AppEvent::BreakDue {
                     break_type: BreakType::Short,
-                    remaining_secs: 31
+                } => {
+                    saw_break_due = true;
+                    break;
                 }
-            ) {
-                saw_prompt = true;
-                break;
+                AppEvent::PreBreakPromptTick { .. } | AppEvent::PreBreakPromptHidden => {
+                    panic!("pre-break prompt event emitted when prompt is disabled")
+                }
+                _ => {}
             }
         }
-        assert!(saw_prompt);
-
-        sched.defer_break(Duration::from_secs(60));
-
-        let ev = rx.recv().await.unwrap();
-        assert!(matches!(ev, AppEvent::BreakDeferred { secs: 60 }));
-        let ev = rx.recv().await.unwrap();
-        assert!(matches!(ev, AppEvent::PreBreakPromptHidden));
-        let ev = rx.recv().await.unwrap();
-        assert!(matches!(
-            ev,
-            AppEvent::StateChanged(SchedulerState::Working)
-        ));
-        assert_eq!(sched.remaining_secs(), 60);
+        assert!(saw_break_due);
     }
 }

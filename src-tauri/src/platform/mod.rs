@@ -1,5 +1,5 @@
 pub mod wayland;
-pub mod x11;
+pub mod wayland_inhibit;
 
 // ---------------------------------------------------------------------------
 // ActivitySource trait
@@ -20,11 +20,10 @@ pub trait ActivitySource: Send + Sync {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SessionType {
     Wayland,
-    X11,
 }
 
 /// Detect the current display server by reading `$XDG_SESSION_TYPE`.
-/// Falls back to X11 if the variable is absent or unrecognised.
+/// Only Wayland is supported.
 pub fn detect_session_type() -> SessionType {
     match std::env::var("XDG_SESSION_TYPE")
         .unwrap_or_default()
@@ -35,9 +34,12 @@ pub fn detect_session_type() -> SessionType {
             tracing::info!("Detected session type: Wayland");
             SessionType::Wayland
         }
-        _ => {
-            tracing::info!("Detected session type: X11 (fallback)");
-            SessionType::X11
+        other => {
+            tracing::warn!(
+                session_type = other,
+                "Detected non-Wayland session; only Wayland is supported"
+            );
+            SessionType::Wayland
         }
     }
 }

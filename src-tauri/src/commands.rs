@@ -1,10 +1,11 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use tauri::State;
+use tauri::{AppHandle, State};
+use tauri_plugin_autostart::ManagerExt;
 
 use crate::config::{AppConfig, ConfigManager};
-use crate::events::SchedulerState;
+use crate::events::{AppEvent, EventBus, SchedulerState};
 use crate::power;
 use crate::scheduler::{SchedulerPort, TimerScheduler};
 use crate::screen_lock;
@@ -45,8 +46,30 @@ pub fn get_config(config_manager: State<Arc<ConfigManager>>) -> AppConfig {
 
 /// Validate and persist a new configuration.
 #[tauri::command]
-pub fn set_config(config: AppConfig, config_manager: State<Arc<ConfigManager>>) -> IpcResult<()> {
-    config_manager.update(config).map_err(IpcError::from)
+pub fn set_config(
+    config: AppConfig,
+    app_handle: AppHandle,
+    config_manager: State<Arc<ConfigManager>>,
+    bus: State<Arc<EventBus>>,
+) -> IpcResult<()> {
+    config_manager
+        .update(config.clone())
+        .map_err(IpcError::from)?;
+
+    // Notify the rest of the app so timer/idle settings take effect immediately.
+    bus.emit(AppEvent::ConfigUpdated(config.clone()));
+
+    // Sync login autostart with the new preference.
+    let autostart = app_handle.autolaunch();
+    if config.autostart {
+        if let Err(error) = autostart.enable() {
+            tracing::warn!("Failed to enable autostart: {error}");
+        }
+    } else if let Err(error) = autostart.disable() {
+        tracing::warn!("Failed to disable autostart: {error}");
+    }
+
+    Ok(())
 }
 
 // ---------------------------------------------------------------------------

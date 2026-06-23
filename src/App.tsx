@@ -6,10 +6,21 @@ import PromptWindow from "./components/PromptWindow";
 import SettingsPanel from "./components/SettingsPanel";
 import type { UpdateInfo } from "./stores/useUpdateStore";
 import { useUpdateStore } from "./stores/useUpdateStore";
+import { getConfig } from "./lib/ipc";
+import { applyTheme } from "./lib/theme";
 
 const windowLabel = getCurrentWebviewWindow().label;
 
 function App() {
+  // Apply the saved theme on startup in every window.
+  useEffect(() => {
+    getConfig()
+      .then((config) => applyTheme(config.theme))
+      .catch(() => {
+        // Ignore: the settings window will apply the theme once config loads.
+      });
+  }, []);
+
   useEffect(() => {
     if (windowLabel !== "settings") {
       return;

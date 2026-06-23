@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { useSchedulerStore } from "../stores/useSchedulerStore";
 import { getConfig, getState, getRemaining } from "../lib/ipc";
+import { playBreakSound } from "../lib/sound";
 
 export function useTauriEvents() {
   const startBreak = useSchedulerStore((s) => s.startBreak);
@@ -36,6 +37,9 @@ export function useTauriEvents() {
                 ? config.long_break_duration_secs
                 : config.break_duration_secs;
             startBreak(event.payload.breakType, totalSecs);
+            if (config.sound_enabled) {
+              playBreakSound();
+            }
           }),
           listen<{ remainingSecs: number }>("break-tick", (event) => {
             setRemaining(event.payload.remainingSecs);

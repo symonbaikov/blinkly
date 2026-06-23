@@ -102,8 +102,7 @@ fn position_prompt_window<R: Runtime>(window: &tauri::WebviewWindow<R>) -> tauri
         let size = monitor.size();
         let work_area = monitor.work_area();
         let window_size = window.outer_size()?;
-        let x = work_area.position.x
-            + ((size.width as i32 - window_size.width as i32) / 2).max(0);
+        let x = work_area.position.x + ((size.width as i32 - window_size.width as i32) / 2).max(0);
         let y = work_area.position.y + PROMPT_MARGIN_TOP;
         window.set_position(PhysicalPosition::new(x, y))?;
     }

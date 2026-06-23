@@ -59,10 +59,12 @@ function BarChart({ data }: { data: DayStat[] }) {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="bg-gray-50 rounded-xl p-4">
-      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
-      <p className="text-2xl font-semibold text-gray-900 mt-1">{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+    <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-4 transition-colors">
+      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">
+        {label}
+      </p>
+      <p className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{value}</p>
+      {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -93,13 +95,19 @@ export default function StatsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Statistics</h2>
-        <p className="text-sm text-gray-500 mt-1">Last 7 days overview</p>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Statistics</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Last 7 days overview</p>
       </div>
 
-      {loading && <p className="text-sm text-gray-400 text-center py-8">Loading...</p>}
+      {loading && (
+        <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Loading...</p>
+      )}
 
-      {error && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+      {error && (
+        <p className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/30 rounded-lg px-3 py-2">
+          {error}
+        </p>
+      )}
 
       {!loading && !error && (
         <>
@@ -111,13 +119,15 @@ export default function StatsPage() {
 
           {data.length > 0 ? (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3">
                 Work time per day
               </p>
               <BarChart data={data} />
             </div>
           ) : (
-            <p className="text-sm text-gray-400 text-center py-8">No data for this period yet.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">
+              No data for this period yet.
+            </p>
           )}
         </>
       )}
