@@ -146,6 +146,10 @@ pub fn run() {
             overlay::spawn_overlay_listener(app.handle().clone(), Arc::clone(&bus));
             prompt::spawn_prompt_listener(app.handle().clone(), Arc::clone(&bus));
 
+            // Create the single Wayland inhibitor immediately so GNOME only has
+            // to ask for permission once (on app startup) instead of every break.
+            overlay::ensure_overlay_inhibitor_on_main_thread(app.handle());
+
             // Stats aggregator
             stats::spawn_stats_aggregator(Arc::clone(&storage), Arc::clone(&bus));
 

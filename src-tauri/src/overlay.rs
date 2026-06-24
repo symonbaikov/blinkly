@@ -45,6 +45,31 @@ fn inhibitor_slot() -> &'static Mutex<Option<BreakInhibitor>> {
 // Background listener
 // ---------------------------------------------------------------------------
 
+/// Create the Wayland inhibitor once and keep it alive for the app lifetime.
+///
+/// GNOME shows the "Allow inhibiting shortcuts?" dialog every time a new
+/// inhibitor object is created, so we must create exactly one inhibitor and
+/// never recreate it. Call this on the GTK main thread.
+pub fn ensure_overlay_inhibitor_on_main_thread<R: Runtime>(app: &AppHandle<R>) {
+    let app_for_closure = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        if inhibitor_slot().lock().expect("inhibitor lock").is_some() {
+            return;
+        }
+        if let Some(window) = app_for_closure.get_webview_window(OVERLAY_LABEL) {
+            match BreakInhibitor::new(&window) {
+                Ok(inhibitor) => {
+                    *inhibitor_slot().lock().expect("inhibitor lock") = Some(inhibitor);
+                    tracing::info!("Overlay: Wayland inhibitor created once");
+                }
+                Err(error) => {
+                    tracing::warn!(%error, "Overlay: failed to create Wayland inhibitor");
+                }
+            }
+        }
+    });
+}
+
 /// Spawns a task that bridges internal `AppEvent`s to Tauri window events.
 ///
 /// Shows the overlay fullscreen window on break start, hides it on break end.
@@ -68,28 +93,6 @@ pub fn spawn_overlay_listener<R: Runtime>(app: AppHandle<R>, bus: Arc<EventBus>)
                         let _ = window.set_visible_on_all_workspaces(true);
                         let _ = window.show();
                         let _ = window.set_focus();
-
-                        // Create the inhibitor on the main thread: the Wayland
-                        // display is owned by GTK and must not be touched from
-                        // a Tokio worker thread.
-                        let app_for_main = app.clone();
-                        let _ = app.run_on_main_thread(move || {
-                            if let Some(window) = app_for_main.get_webview_window(OVERLAY_LABEL) {
-                                match BreakInhibitor::new(&window) {
-                                    Ok(inhibitor) => {
-                                        *inhibitor_slot().lock().expect("inhibitor lock") =
-                                            Some(inhibitor);
-                                        tracing::info!("Overlay: Wayland inhibitors active");
-                                    }
-                                    Err(error) => {
-                                        tracing::warn!(
-                                            %error,
-                                            "Overlay: failed to create Wayland inhibitors"
-                                        );
-                                    }
-                                }
-                            }
-                        });
 
                         watchdog_stop = Some(spawn_focus_watchdog(window));
                     }
