@@ -113,7 +113,8 @@ pub fn spawn_overlay_listener<R: Runtime>(app: AppHandle<R>, bus: Arc<EventBus>)
                 Ok(AppEvent::BreakSkipped) | Ok(AppEvent::BreakSnoozed { .. }) => {
                     let _ = app.emit_to(EventTarget::webview(OVERLAY_LABEL), "break-completed", ());
 
-                    release_inhibitor_on_main_thread(&app);
+                    // Keep the inhibitor alive — destroying and recreating it every
+                    // break causes GNOME to re-prompt the "Allow?" dialog each time.
                     if let Some(stop) = watchdog_stop.take() {
                         stop.store(false, Ordering::Relaxed);
                     }
@@ -127,7 +128,7 @@ pub fn spawn_overlay_listener<R: Runtime>(app: AppHandle<R>, bus: Arc<EventBus>)
                 Ok(AppEvent::BreakCompleted) => {
                     let _ = app.emit_to(EventTarget::webview(OVERLAY_LABEL), "break-completed", ());
 
-                    release_inhibitor_on_main_thread(&app);
+                    // Keep the inhibitor alive — see comment above.
                     if let Some(stop) = watchdog_stop.take() {
                         stop.store(false, Ordering::Relaxed);
                     }
@@ -146,13 +147,6 @@ pub fn spawn_overlay_listener<R: Runtime>(app: AppHandle<R>, bus: Arc<EventBus>)
                 _ => {}
             }
         }
-    });
-}
-
-fn release_inhibitor_on_main_thread<R: Runtime>(app: &AppHandle<R>) {
-    let app = app.clone();
-    let _ = app.run_on_main_thread(move || {
-        *inhibitor_slot().lock().expect("inhibitor lock") = None;
     });
 }
 
