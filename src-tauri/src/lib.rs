@@ -13,7 +13,6 @@ pub mod stats;
 pub mod storage;
 pub mod tray;
 pub mod updates;
-pub mod x11_grab;
 
 use std::sync::Arc;
 
@@ -22,6 +21,7 @@ use events::EventBus;
 use scheduler::{SchedulerPort, TimerScheduler};
 use storage::SqliteStorage;
 use tauri::{image::Image, Manager, Runtime};
+use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 
 const APP_ICON: &[u8] = include_bytes!("../icons/icon.png");
 
@@ -90,6 +90,10 @@ pub fn run() {
     let config_manager = Arc::new(ConfigManager::new(Arc::clone(&storage)));
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            None,
+        ))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -99,15 +103,32 @@ pub fn run() {
             // Everything that calls tokio::spawn must run here, inside the
             // Tauri-managed Tokio runtime.
 
+            // Sync autostart with saved preference on launch.
+            {
+                let autostart = app.autolaunch();
+                let wants_autostart = config_manager.current().autostart;
+                match autostart.is_enabled() {
+                    Ok(false) if wants_autostart => {
+                        if let Err(error) = autostart.enable() {
+                            tracing::warn!("Failed to enable autostart on launch: {error}");
+                        }
+                    }
+                    Ok(true) if !wants_autostart => {
+                        if let Err(error) = autostart.disable() {
+                            tracing::warn!("Failed to disable autostart on launch: {error}");
+                        }
+                    }
+                    Err(error) => {
+                        tracing::warn!("Failed to read autostart state on launch: {error}");
+                    }
+                    _ => {}
+                }
+            }
+
             // Activity Tracker
             use activity::ActivityTracker;
-            use platform::{detect_session_type, SessionType};
-            let activity_source: Arc<dyn platform::ActivitySource> = match detect_session_type() {
-                SessionType::Wayland => Arc::new(platform::wayland::WaylandIdleSource::new()),
-                SessionType::X11 => Arc::new(
-                    platform::x11::X11IdleSource::new().expect("failed to connect to X11 display"),
-                ),
-            };
+            let activity_source: Arc<dyn platform::ActivitySource> =
+                Arc::new(platform::wayland::WaylandIdleSource::new());
             let _activity_tracker =
                 ActivityTracker::new(activity_source, Arc::clone(&bus), config_manager.current());
 
@@ -115,29 +136,31 @@ pub fn run() {
             let scheduler = TimerScheduler::new(Arc::clone(&bus), config_manager.current());
             scheduler.start();
 
+            // Tray icon and menu
+            if let Err(error) =
+                tray::build_tray(app.handle(), Arc::clone(&scheduler), Arc::clone(&bus))
+            {
+                tracing::warn!("Failed to build tray icon: {error}");
+            }
+
+            overlay::spawn_overlay_listener(app.handle().clone(), Arc::clone(&bus));
+            prompt::spawn_prompt_listener(app.handle().clone(), Arc::clone(&bus));
+
             // Stats aggregator
             stats::spawn_stats_aggregator(Arc::clone(&storage), Arc::clone(&bus));
 
-            // Notifications
+            // System notifications
             let notifier = notifications::create_system_notifier();
-            notifications::spawn_notification_listener(notifier, Arc::clone(&bus));
+            notifications::spawn_notification_listener(Arc::clone(&notifier), Arc::clone(&bus));
 
-            updates::spawn_update_checker(
-                app.handle().clone(),
-                notifications::create_system_notifier(),
-            );
-
-            // Tray
-            tray::build_tray(app.handle(), Arc::clone(&scheduler), Arc::clone(&bus))?;
-
-            // Overlay listener
-            overlay::spawn_overlay_listener(app.handle().clone(), Arc::clone(&bus));
-            prompt::spawn_prompt_listener(app.handle().clone(), Arc::clone(&bus));
+            // Update checker
+            updates::spawn_update_checker(app.handle().clone(), Arc::clone(&notifier));
 
             // Register managed state (accessible to IPC commands)
             app.manage(Arc::clone(&config_manager));
             app.manage(Arc::clone(&scheduler));
             app.manage(Arc::clone(&storage));
+            app.manage(Arc::clone(&bus));
 
             Ok(())
         })

@@ -2,12 +2,12 @@ use super::ActivitySource;
 
 /// Wayland idle source.
 ///
-/// Full implementation uses `ext_idle_notify_v1` protocol (event-driven).
-/// This polling implementation reads idle time via the GNOME Mutter / KDE
-/// D-Bus interfaces as a pragmatic fallback that works on all compositors.
+/// Queries idle time via compositor-specific D-Bus interfaces:
+///   - org.gnome.Mutter.IdleMonitor (GNOME)
+///   - org.kde.KWin.Idle (KDE Plasma)
 ///
-/// For Phase 4 we provide a functional polling implementation; the
-/// fully event-driven `ext_idle_notify_v1` version is planned for a later phase.
+/// Falls back to 0 so the scheduler keeps running if neither interface is
+/// available.
 pub struct WaylandIdleSource {
     /// Cache the D-Bus connection so we don't reconnect on every poll.
     session_bus: Option<zbus::blocking::Connection>,
@@ -39,14 +39,29 @@ impl WaylandIdleSource {
             .ok()?;
         msg.body().deserialize::<u64>().ok()
     }
+
+    /// Try to get idle time via org.kde.KWin.Idle (KDE Plasma Wayland).
+    fn idle_ms_via_kde(&self) -> Option<u64> {
+        let conn = self.session_bus.as_ref()?;
+        let msg = conn
+            .call_method(
+                Some("org.kde.KWin"),
+                "/org/kde/KWin/Idle",
+                Some("org.kde.KWin.Idle"),
+                "GetIdleTime",
+                &(),
+            )
+            .ok()?;
+        msg.body().deserialize::<u64>().ok()
+    }
 }
 
 impl ActivitySource for WaylandIdleSource {
     fn idle_seconds(&self) -> anyhow::Result<u64> {
-        if let Some(ms) = self.idle_ms_via_mutter() {
+        if let Some(ms) = self.idle_ms_via_mutter().or_else(|| self.idle_ms_via_kde()) {
             return Ok(ms / 1000);
         }
-        // If D-Bus query fails (non-GNOME compositor), return 0 so the
+        // If D-Bus query fails (unsupported compositor), return 0 so the
         // scheduler keeps running rather than silently resetting.
         tracing::warn!("WaylandIdleSource: could not query idle time, reporting 0s idle");
         Ok(0)

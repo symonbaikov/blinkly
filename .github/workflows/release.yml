@@ -48,6 +48,9 @@ jobs:
             libwebkit2gtk-4.1-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
+            libwayland-dev \
+            libwayland-bin \
+            wayland-protocols \
             patchelf
 
       - name: Setup Node.js
@@ -103,6 +106,9 @@ jobs:
             libwebkit2gtk-4.1-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
+            libwayland-dev \
+            libwayland-bin \
+            wayland-protocols \
             patchelf \
             rpm
 

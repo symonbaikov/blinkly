@@ -10,8 +10,10 @@ export default function SoundPage({ draft, update }: SoundPageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Sound</h2>
-        <p className="text-sm text-gray-500 mt-1">Audio notifications for breaks</p>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Sound</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Audio notifications for breaks
+        </p>
       </div>
 
       <div className="space-y-4">

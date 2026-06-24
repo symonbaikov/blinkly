@@ -16,6 +16,7 @@ Desktop companion that nudges you away from the screen with soft overlays, follo
 </div>
 
 ---
+
 <img width="1920" height="1080" alt="Screenshot From 2026-04-10 22-50-19" src="https://github.com/user-attachments/assets/ea29f25a-51f7-4cf8-8455-50913efe583a" />
 
 ## ✨ Features
@@ -48,16 +49,15 @@ Blinkly is a **Linux-first** application, built and tested on modern desktop env
 
 ### Desktop environments
 
-| DE                         | Wayland           | X11            |
-| -------------------------- | ----------------- | -------------- |
-| GNOME 45+                  | ✅ Primary target | ✅ Supported   |
-| KDE Plasma 6+              | ✅ Supported      | ✅ Supported   |
-| Other DEs with system tray | ⚠️ May work       | ✅ Should work |
+| DE            | Wayland      |
+| ------------- | ------------ |
+| GNOME 45+     | ✅ Supported |
+| KDE Plasma 6+ | ✅ Supported |
 
 ### Display servers
 
-- **Wayland** — primary target, uses `ext_idle_notify_v1` for idle detection
-- **X11** — full fallback support via `XScreenSaverQueryInfo`
+- **Wayland** — only supported display server
+- **X11** — not supported
 
 ### System requirements
 
@@ -116,6 +116,16 @@ sudo dnf install ./blinkly-0.1.0-1.x86_64.rpm
 - `AppImage` users get automatic in-place updates from within Blinkly.
 - `.deb` and `.rpm` users get a native notification plus a download prompt in Settings that opens the latest release page.
 
+### KDE Plasma extra hardening (optional)
+
+Blinkly blocks Alt+Tab and pointer input during breaks on Wayland. KDE users who want an additional system-level lock can run:
+
+```bash
+./scripts/setup-kde-window-rule.sh
+```
+
+Then log out and back in (or restart KWin) for the rule to take effect.
+
 ---
 
 ## 🚀 Usage
@@ -142,7 +152,7 @@ Blinkly is built with **Tauri 2**, **Rust**, **React 19**, **TypeScript**, and *
 
 - Rust (stable) — [rustup.rs](https://rustup.rs/)
 - Node.js 20+ and npm
-- Linux build dependencies: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`
+- Linux build dependencies: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `libwayland-dev`, `libwayland-bin`, `wayland-protocols`
 
 ### Run in dev mode
 

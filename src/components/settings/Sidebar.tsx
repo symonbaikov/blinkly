@@ -122,7 +122,7 @@ export default function Sidebar({ active, onChange }: SidebarProps) {
   const version = useAppVersion();
 
   return (
-    <div className="w-[220px] shrink-0 bg-transparent flex flex-col h-full py-4 px-3">
+    <div className="w-[220px] shrink-0 bg-transparent flex flex-col h-full py-4 px-3 transition-colors">
       {/* Brand */}
       <div className="px-4 mb-6 mt-2 flex items-center gap-3">
         <img src="/logo.png" alt="Blinkly Logo" className="w-8 h-8 drop-shadow-sm rounded-lg" />
@@ -139,12 +139,12 @@ export default function Sidebar({ active, onChange }: SidebarProps) {
             onClick={() => onChange(item.id)}
             className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 ${
               active === item.id
-                ? "bg-white/60 text-blue-600 shadow-sm backdrop-blur-md border border-white/50 translate-x-1"
-                : "text-gray-600 hover:bg-white/40 hover:text-gray-900 hover:translate-x-0.5 border border-transparent"
+                ? "bg-white/60 dark:bg-gray-800/80 text-blue-600 dark:text-blue-400 shadow-sm backdrop-blur-md border border-white/50 dark:border-gray-700/60 translate-x-1"
+                : "text-gray-600 dark:text-gray-400 hover:bg-white/40 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100 hover:translate-x-0.5 border border-transparent"
             }`}
           >
             <span
-              className={`shrink-0 transition-colors ${active === item.id ? "text-pink-500" : ""}`}
+              className={`shrink-0 transition-colors ${active === item.id ? "text-pink-500 dark:text-pink-400" : ""}`}
             >
               {item.icon}
             </span>
@@ -155,7 +155,7 @@ export default function Sidebar({ active, onChange }: SidebarProps) {
 
       {/* Footer */}
       <div className="px-4 py-4">
-        <p className="text-xs font-bold text-gray-400">v{version}</p>
+        <p className="text-xs font-bold text-gray-400 dark:text-gray-500">v{version}</p>
       </div>
     </div>
   );

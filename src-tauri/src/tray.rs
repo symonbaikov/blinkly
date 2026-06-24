@@ -4,7 +4,7 @@ use tauri::{
     image::Image,
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, Runtime, WebviewUrl, WebviewWindowBuilder,
+    AppHandle, Emitter, EventTarget, Manager, Runtime, WebviewUrl, WebviewWindowBuilder,
 };
 use tokio::sync::broadcast;
 
@@ -19,13 +19,19 @@ const ICON_WORKING: &[u8] = include_bytes!("../icons/tray/working.png");
 const ICON_ONBREAK: &[u8] = include_bytes!("../icons/tray/onbreak.png");
 const ICON_PAUSED: &[u8] = include_bytes!("../icons/tray/paused.png");
 
-fn icon_for_state(state: &SchedulerState) -> Image<'static> {
+fn icon_for_state(state: &SchedulerState) -> Option<Image<'static>> {
     let bytes: &'static [u8] = match state {
         SchedulerState::Working => ICON_WORKING,
         SchedulerState::OnBreak => ICON_ONBREAK,
         SchedulerState::Idle | SchedulerState::Paused => ICON_PAUSED,
     };
-    Image::from_bytes(bytes).expect("tray icon decode failed")
+    match Image::from_bytes(bytes) {
+        Ok(icon) => Some(icon),
+        Err(error) => {
+            tracing::warn!(%error, "Tray: failed to decode icon for {:?}", state);
+            None
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -50,15 +56,23 @@ const ID_QUIT: &str = "quit";
 /// minimize/maximize/close buttons unresponsive. Building it on demand (and
 /// letting it fully close, see the window event handler) keeps the WM frame
 /// interactive every time it is opened.
-fn open_settings<R: Runtime>(app: &AppHandle<R>) {
+fn open_settings<R: Runtime>(app: &AppHandle<R>, page: Option<&str>) {
     if let Some(window) = app.get_webview_window("settings") {
         let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();
+        if let Some(page) = page {
+            let _ = app.emit_to(EventTarget::webview("settings"), "navigate-to-page", page);
+        }
         return;
     }
 
-    match WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("index.html".into()))
+    let url = match page {
+        Some(page) => WebviewUrl::App(format!("index.html#{page}").into()),
+        None => WebviewUrl::App("index.html".into()),
+    };
+
+    match WebviewWindowBuilder::new(app, "settings", url)
         .title("Blinkly — Settings")
         .inner_size(780.0, 580.0)
         .min_inner_size(680.0, 480.0)
@@ -87,7 +101,12 @@ pub fn build_tray<R: Runtime>(
     bus: Arc<EventBus>,
 ) -> tauri::Result<TrayIcon<R>> {
     let state = scheduler.state();
-    let icon = icon_for_state(&state);
+    let icon = icon_for_state(&state).ok_or_else(|| {
+        tauri::Error::Io(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "failed to decode embedded tray icon",
+        ))
+    })?;
     let tooltip = tooltip_for_state(&state, scheduler.remaining_secs());
 
     let menu = build_menu(app, &state)?;
@@ -182,11 +201,11 @@ fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, scheduler: &Arc<TimerSchedu
         }
         ID_SETTINGS => {
             tracing::info!("Tray: open settings");
-            open_settings(app);
+            open_settings(app, None);
         }
         ID_STATS => {
             tracing::info!("Tray: open stats (via settings window)");
-            open_settings(app);
+            open_settings(app, Some("statistics"));
         }
         ID_QUIT => {
             tracing::info!("Tray: quit");
@@ -217,7 +236,9 @@ fn spawn_state_listener<R: Runtime>(
                     let tooltip = tooltip_for_state(&new_state, remaining);
 
                     if let Some(tray) = app.tray_by_id(&tray_id) {
-                        let _ = tray.set_icon(Some(icon));
+                        if let Some(icon) = icon {
+                            let _ = tray.set_icon(Some(icon));
+                        }
                         let _ = tray.set_tooltip(Some(&tooltip));
 
                         // Rebuild the menu to flip Pause↔Resume label.
