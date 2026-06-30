@@ -287,7 +287,11 @@ impl TimerScheduler {
                     let mut g = inner_t.lock().unwrap();
                     g.remaining_secs = remaining;
 
-                    if remaining > 0 && remaining <= PRE_BREAK_PROMPT_SECS {
+                    let prompt_secs = PRE_BREAK_PROMPT_SECS;
+                    if prompt_secs == 0 {
+                        g.pending_break_type = None;
+                        None
+                    } else if remaining <= prompt_secs {
                         let break_type = g.pending_break_type.clone().unwrap_or_else(|| {
                             let next = g.next_break_type();
                             g.pending_break_type = Some(next.clone());

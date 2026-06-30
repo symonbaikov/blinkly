@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTauriEvents } from "../hooks/useTauriEvents";
 import { suspendSystem } from "../lib/ipc";
+import { msUntilNextLocalDay } from "../lib/localDay";
 import { useSchedulerStore } from "../stores/useSchedulerStore";
 import { getConfig, getRemaining, getState } from "../lib/ipc";
 
@@ -91,7 +92,25 @@ export default function OverlayWindow() {
   }, [startBreak, endBreak, setRemaining]);
 
   useEffect(() => {
+    let timeoutId: ReturnType<typeof window.setTimeout> | null = null;
+    let cancelled = false;
+
+    const refreshAndScheduleNextDay = () => {
+      void refreshSkipAllowance().finally(() => {
+        if (cancelled) return;
+        timeoutId = window.setTimeout(refreshAndScheduleNextDay, msUntilNextLocalDay());
+      });
+    };
+
     void refreshSkipAllowance();
+    timeoutId = window.setTimeout(refreshAndScheduleNextDay, msUntilNextLocalDay());
+
+    return () => {
+      cancelled = true;
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
   }, [refreshSkipAllowance]);
 
   const prefersReducedMotion =
