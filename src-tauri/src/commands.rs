@@ -3,8 +3,8 @@ use std::time::Duration;
 
 use chrono::{DateTime, TimeZone};
 use tauri::{AppHandle, State};
-use tauri_plugin_autostart::ManagerExt;
 
+use crate::autostart;
 use crate::config::{AppConfig, ConfigManager};
 use crate::events::{AppEvent, EventBus, SchedulerState};
 use crate::power;
@@ -61,14 +61,7 @@ pub fn set_config(
     bus.emit(AppEvent::ConfigUpdated(config.clone()));
 
     // Sync login autostart with the new preference.
-    let autostart = app_handle.autolaunch();
-    if config.autostart {
-        if let Err(error) = autostart.enable() {
-            tracing::warn!("Failed to enable autostart: {error}");
-        }
-    } else if let Err(error) = autostart.disable() {
-        tracing::warn!("Failed to disable autostart: {error}");
-    }
+    autostart::sync_login_autostart(&app_handle, config.autostart, "sync");
 
     Ok(())
 }

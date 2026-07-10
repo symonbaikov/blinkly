@@ -1,4 +1,5 @@
 pub mod activity;
+mod autostart;
 pub mod commands;
 pub mod config;
 pub mod events;
@@ -105,23 +106,23 @@ pub fn run() {
 
             // Sync autostart with saved preference on launch.
             {
-                let autostart = app.autolaunch();
                 let wants_autostart = config_manager.current().autostart;
-                match autostart.is_enabled() {
-                    Ok(false) if wants_autostart => {
-                        if let Err(error) = autostart.enable() {
-                            tracing::warn!("Failed to enable autostart on launch: {error}");
+                if autostart::should_sync_login_autostart() {
+                    let autostart = app.autolaunch();
+                    match autostart.is_enabled() {
+                        Ok(false) if wants_autostart => {
+                            autostart::sync_login_autostart(app.handle(), true, "enable");
                         }
-                    }
-                    Ok(true) if !wants_autostart => {
-                        if let Err(error) = autostart.disable() {
-                            tracing::warn!("Failed to disable autostart on launch: {error}");
+                        Ok(true) if !wants_autostart => {
+                            autostart::sync_login_autostart(app.handle(), false, "disable");
                         }
+                        Err(error) => {
+                            tracing::warn!("Failed to read autostart state on launch: {error}");
+                        }
+                        _ => {}
                     }
-                    Err(error) => {
-                        tracing::warn!("Failed to read autostart state on launch: {error}");
-                    }
-                    _ => {}
+                } else {
+                    tracing::debug!("Skipping login autostart state check in debug build");
                 }
             }
 
