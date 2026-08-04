@@ -9,6 +9,7 @@ use tokio::sync::broadcast;
 
 use crate::events::{AppEvent, BreakType, EventBus};
 use crate::platform::wayland_inhibit::BreakInhibitor;
+use crate::window_placement::fullscreen_on_primary_monitor;
 
 const OVERLAY_LABEL: &str = "overlay";
 
@@ -65,16 +66,24 @@ pub fn spawn_overlay_listener<R: Runtime>(app: AppHandle<R>, bus: Arc<EventBus>)
                     };
 
                     if let Some(window) = app.get_webview_window(OVERLAY_LABEL) {
-                        let _ = window.set_visible_on_all_workspaces(true);
-                        let _ = window.show();
-                        let _ = window.set_focus();
-
-                        // Create the inhibitor on the main thread: the Wayland
-                        // display is owned by GTK and must not be touched from
-                        // a Tokio worker thread.
+                        // Fullscreen placement and inhibitor creation must both
+                        // run on GTK's main thread. GTK can target the desktop's
+                        // selected primary monitor, unlike Tauri's generic
+                        // fullscreen request.
                         let app_for_main = app.clone();
-                        let _ = app.run_on_main_thread(move || {
+                        if let Err(error) = app.run_on_main_thread(move || {
                             if let Some(window) = app_for_main.get_webview_window(OVERLAY_LABEL) {
+                                if let Err(error) = fullscreen_on_primary_monitor(&window) {
+                                    tracing::warn!(
+                                        %error,
+                                        "Overlay: failed to target primary monitor; using default fullscreen"
+                                    );
+                                    let _ = window.set_fullscreen(true);
+                                }
+                                let _ = window.set_visible_on_all_workspaces(true);
+                                let _ = window.show();
+                                let _ = window.set_focus();
+
                                 match BreakInhibitor::new(&window) {
                                     Ok(inhibitor) => {
                                         *inhibitor_slot().lock().expect("inhibitor lock") =
@@ -89,7 +98,16 @@ pub fn spawn_overlay_listener<R: Runtime>(app: AppHandle<R>, bus: Arc<EventBus>)
                                     }
                                 }
                             }
-                        });
+                        }) {
+                            tracing::warn!(
+                                %error,
+                                "Overlay: failed to access GTK main thread; using default fullscreen"
+                            );
+                            let _ = window.set_fullscreen(true);
+                            let _ = window.set_visible_on_all_workspaces(true);
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
 
                         watchdog_stop = Some(spawn_focus_watchdog(window));
                     }

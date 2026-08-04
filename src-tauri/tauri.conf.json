@@ -25,7 +25,6 @@
         "transparent": false,
         "backgroundColor": "#0f0c29",
         "visible": false,
-        "fullscreen": true,
         "visibleOnAllWorkspaces": true,
         "skipTaskbar": true,
         "focus": true
@@ -63,7 +62,7 @@
     "longDescription": "Blinkly is a tray-first eye-break reminder for Linux that follows the 20-20-20 rule. It uses soft overlays, native notifications, idle detection, and lightweight settings so regular breaks feel helpful instead of disruptive.",
     "licenseFile": "../LICENSE",
     "publisher": "Symon Baikov",
-    "homepage": "https://github.com/symonbaikov/eye-relax",
+    "homepage": "https://github.com/symonbaikov/blinkly",
     "targets": "all",
     "linux": {
       "deb": {
@@ -86,7 +85,7 @@
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDgzMUU0NTgzQzYyQ0NGNTcKUldSWHp5ekdnMFVlZzNIOW1YWCs3WGoyaGNRQWtEdUUzVFNpdDF0UVBGVC94L2IxNmNlZkUzOTEK",
-      "endpoints": ["https://github.com/symonbaikov/eye-relax/releases/latest/download/latest.json"]
+      "endpoints": ["https://github.com/symonbaikov/blinkly/releases/latest/download/latest.json"]
     }
   }
 }

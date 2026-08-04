@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, EventTarget, Manager, PhysicalPosition, Runtime};
+use tauri::{AppHandle, Emitter, EventTarget, Manager, Runtime};
 use tokio::sync::broadcast;
 
-use crate::events::{AppEvent, BreakType, EventBus};
+use crate::{
+    events::{AppEvent, BreakType, EventBus},
+    window_placement::top_center_on_primary_monitor,
+};
 
 const PROMPT_LABEL: &str = "prompt";
 const PROMPT_MARGIN_TOP: i32 = 40;
@@ -94,18 +97,5 @@ pub fn spawn_prompt_listener<R: Runtime>(app: AppHandle<R>, bus: Arc<EventBus>) 
 }
 
 fn position_prompt_window<R: Runtime>(window: &tauri::WebviewWindow<R>) -> tauri::Result<()> {
-    let monitor = window
-        .current_monitor()?
-        .or_else(|| window.primary_monitor().ok().flatten());
-
-    if let Some(monitor) = monitor {
-        let size = monitor.size();
-        let work_area = monitor.work_area();
-        let window_size = window.outer_size()?;
-        let x = work_area.position.x + ((size.width as i32 - window_size.width as i32) / 2).max(0);
-        let y = work_area.position.y + PROMPT_MARGIN_TOP;
-        window.set_position(PhysicalPosition::new(x, y))?;
-    }
-
-    Ok(())
+    top_center_on_primary_monitor(window, PROMPT_MARGIN_TOP)
 }

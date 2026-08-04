@@ -306,6 +306,7 @@ dependencies = [
  "cc",
  "chrono",
  "dirs 6.0.0",
+ "gtk",
  "notify-rust",
  "pkg-config",
  "raw-window-handle",

@@ -13,6 +13,7 @@ pub mod stats;
 pub mod storage;
 pub mod tray;
 pub mod updates;
+pub mod window_placement;
 
 use std::sync::Arc;
 
@@ -137,10 +138,11 @@ pub fn run() {
             scheduler.start();
 
             // Tray icon and menu
-            if let Err(error) =
-                tray::build_tray(app.handle(), Arc::clone(&scheduler), Arc::clone(&bus))
-            {
-                tracing::warn!("Failed to build tray icon: {error}");
+            match tray::build_tray(app.handle(), Arc::clone(&scheduler), Arc::clone(&bus)) {
+                Ok(tray) => {
+                    app.manage(tray);
+                }
+                Err(error) => tracing::warn!("Failed to build tray icon: {error}"),
             }
 
             overlay::spawn_overlay_listener(app.handle().clone(), Arc::clone(&bus));

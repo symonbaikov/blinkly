@@ -75,7 +75,7 @@ Blinkly is a **Linux-first** application, built and tested on modern desktop env
 
 ## 📦 Installation
 
-Download all Linux builds from the [GitHub Releases page](https://github.com/symonbaikov/eye-relax/releases).
+Download all Linux builds from the [GitHub Releases page](https://github.com/symonbaikov/blinkly/releases).
 
 | Your system                  | What to download | Notes                  |
 | ---------------------------- | ---------------- | ---------------------- |
@@ -182,6 +182,28 @@ On newer Fedora-like systems, AppImage bundling may also need `NO_STRIP=1` becau
 ```bash
 NO_STRIP=1 npm run tauri build -- --bundles appimage,deb,rpm
 ```
+
+### Publish a release from GitHub Actions
+
+After the one-time setup below, a release is published with one action: open
+**Actions → Release → Run workflow**, choose `patch`, `minor`, or `major`, and
+click **Run workflow**. The workflow increments the version, commits that
+immutable release source, runs the quality checks, builds `.AppImage`, `.deb`,
+and `.rpm` packages, then creates the tag and publishes a GitHub Release only
+if all checks succeed.
+
+Before the first run, add these repository secrets under
+**Settings → Secrets and variables → Actions**:
+
+- `TAURI_SIGNING_PRIVATE_KEY` — the full contents of the existing Blinkly
+  updater private key;
+- `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` — its password, only when the key was
+  generated with one.
+
+The private key must match the public key in `src-tauri/tauri.conf.json`.
+Keep a secure backup of it: replacing it prevents installed versions from
+auto-updating. If `master` is protected, allow GitHub Actions to push release
+commits and tags, or grant the workflow a token that is allowed to do so.
 
 ### Quality gates
 

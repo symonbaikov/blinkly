@@ -10,6 +10,7 @@ use tokio::sync::broadcast;
 
 use crate::events::{AppEvent, EventBus, SchedulerState};
 use crate::scheduler::{SchedulerPort, TimerScheduler};
+use crate::window_placement::center_on_primary_monitor;
 
 // ---------------------------------------------------------------------------
 // Icon paths (embedded at compile time)
@@ -58,9 +59,7 @@ const ID_QUIT: &str = "quit";
 /// interactive every time it is opened.
 fn open_settings<R: Runtime>(app: &AppHandle<R>, page: Option<&str>) {
     if let Some(window) = app.get_webview_window("settings") {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
+        show_settings_window(window);
         if let Some(page) = page {
             let _ = app.emit_to(EventTarget::webview("settings"), "navigate-to-page", page);
         }
@@ -78,17 +77,36 @@ fn open_settings<R: Runtime>(app: &AppHandle<R>, page: Option<&str>) {
         .min_inner_size(680.0, 480.0)
         .resizable(true)
         .decorations(true)
-        .center()
+        .visible(false)
         .skip_taskbar(false)
         .build()
     {
         Ok(window) => {
-            let _ = window.set_focus();
+            show_settings_window(window);
         }
         Err(error) => {
             tracing::warn!("Failed to build settings window: {error}");
         }
     }
+}
+
+/// Request primary-monitor placement before showing Settings and once more
+/// after its surface is mapped. The latter is needed because Wayland may only
+/// apply a placement request after the window exists at the compositor.
+fn show_settings_window<R: Runtime>(window: tauri::WebviewWindow<R>) {
+    let _ = window.unminimize();
+    if let Err(error) = center_on_primary_monitor(&window) {
+        tracing::warn!("Failed to position settings window: {error}");
+    }
+    let _ = window.show();
+    let _ = window.set_focus();
+
+    crate::spawn_async(async move {
+        tokio::time::sleep(std::time::Duration::from_millis(60)).await;
+        if let Err(error) = center_on_primary_monitor(&window) {
+            tracing::warn!("Failed to reposition settings window: {error}");
+        }
+    });
 }
 
 // ---------------------------------------------------------------------------

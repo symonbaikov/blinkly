@@ -1,6 +1,22 @@
 name: Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version increment for this release
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      prerelease:
+        description: Mark the GitHub release as a pre-release
+        required: true
+        default: false
+        type: boolean
   push:
     tags:
       - "v*"
@@ -8,67 +24,151 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.event.repository.default_branch }}
+  cancel-in-progress: false
+
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test:
-    name: Pre-release tests
+  prepare:
+    name: Prepare release version
     runs-on: ubuntu-22.04
+    outputs:
+      ref: ${{ steps.release.outputs.ref }}
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+      prerelease: ${{ steps.release.outputs.prerelease }}
 
     steps:
-      - name: Checkout repository
+      - name: Check out release source
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.repository.default_branch || github.ref }}
+          fetch-depth: 0
 
-      - name: Validate version consistency
-        run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          TAURI_VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
-          NPM_VERSION=$(jq -r '.version' package.json)
-
-          if [ "$TAG_VERSION" != "$TAURI_VERSION" ]; then
-            echo "ERROR: Tag version $TAG_VERSION does not match src-tauri/tauri.conf.json version $TAURI_VERSION"
-            exit 1
-          fi
-
-          if [ "$TAG_VERSION" != "$NPM_VERSION" ]; then
-            echo "ERROR: Tag version $TAG_VERSION does not match package.json version $NPM_VERSION"
-            exit 1
-          fi
-
-          echo "Version $TAG_VERSION is consistent across release inputs"
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            file \
-            jq \
-            libgtk-3-dev \
-            libwebkit2gtk-4.1-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            libwayland-dev \
-            libwayland-bin \
-            wayland-protocols \
-            patchelf
-
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: Setup Rust
+      - name: Create release commit
+        id: release
+        env:
+          BUMP: ${{ inputs.bump }}
+          EVENT_NAME: ${{ github.event_name }}
+          PRERELEASE_INPUT: ${{ inputs.prerelease }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            npm version "$BUMP" --no-git-tag-version
+            VERSION="$(node -p \"require('./package.json').version\")"
+
+            VERSION="$VERSION" node <<'NODE'
+            const fs = require("fs");
+            const version = process.env.VERSION;
+
+            const configPath = "src-tauri/tauri.conf.json";
+            const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+            config.version = version;
+            fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+
+            const cargoPath = "src-tauri/Cargo.toml";
+            const cargo = fs.readFileSync(cargoPath, "utf8").replace(
+              /^(\[package\][\s\S]*?^version = )"[^"]+"/m,
+              `$1"${version}"`,
+            );
+            fs.writeFileSync(cargoPath, cargo);
+
+            const lockPath = "src-tauri/Cargo.lock";
+            const lock = fs.readFileSync(lockPath, "utf8").replace(
+              /(name = "blinkly"\nversion = )"[^"]+"/,
+              `$1"${version}"`,
+            );
+            fs.writeFileSync(lockPath, lock);
+            NODE
+
+            TAG="v$VERSION"
+            if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+              echo "::error::Tag $TAG already exists."
+              exit 1
+            fi
+
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package.json package-lock.json src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.conf.json
+            git commit -m "chore(release): $TAG"
+            git push origin "HEAD:${{ github.event.repository.default_branch }}"
+            REF="$(git rev-parse HEAD)"
+            PRERELEASE="$PRERELEASE_INPUT"
+          else
+            TAG="$GITHUB_REF_NAME"
+            VERSION="${TAG#v}"
+            REF="$TAG"
+            PRERELEASE=false
+          fi
+
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$PRERELEASE" >> "$GITHUB_OUTPUT"
+
+  test:
+    name: Pre-release tests
+    needs: prepare
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            jq \
+            libayatana-appindicator3-dev \
+            libgtk-3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libwayland-dev \
+            libwayland-bin \
+            libxdo-dev \
+            patchelf \
+            wayland-protocols
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Rust cache
+      - name: Restore Rust cache
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: ./src-tauri -> target
 
       - name: Install frontend dependencies
         run: npm ci
+
+      - name: Validate version consistency
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          test "$VERSION" = "${TAG#v}"
+          test "$(jq -r '.version' src-tauri/tauri.conf.json)" = "$VERSION"
+          test "$(node -p \"require('./package.json').version\")" = "$VERSION"
+          test "$(awk -F'"' '/^version = / { print $2; exit }' src-tauri/Cargo.toml)" = "$VERSION"
+          test "$(awk '/name = \"blinkly\"/ { found=1; next } found && /^version = / { gsub(/\"/, \"\"); print $3; exit }' src-tauri/Cargo.lock)" = "$VERSION"
 
       - name: Frontend typecheck
         run: npm run typecheck
@@ -89,39 +189,46 @@ jobs:
 
   build:
     name: Build Linux bundles
-    needs: test
+    needs:
+      - prepare
+      - test
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout repository
+      - name: Check out release source
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
+            build-essential \
             file \
             jq \
-            libgtk-3-dev \
-            libwebkit2gtk-4.1-dev \
             libayatana-appindicator3-dev \
+            libgtk-3-dev \
             librsvg2-dev \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
             libwayland-dev \
             libwayland-bin \
-            wayland-protocols \
+            libxdo-dev \
             patchelf \
-            rpm
+            rpm \
+            wayland-protocols
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: Setup Rust
+      - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Rust cache
+      - name: Restore Rust cache
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: ./src-tauri -> target
@@ -129,52 +236,43 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Build Tauri bundles
+      - name: Verify signing key is configured
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "::error::Set the TAURI_SIGNING_PRIVATE_KEY repository secret before publishing a release."
+            exit 1
+          fi
+
+      - name: Build signed Tauri bundles
         env:
           NO_STRIP: "1"
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: npm run tauri build -- --bundles appimage,deb,rpm
 
-      - name: Generate latest.json
+      - name: Generate updater manifest
         env:
-          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          shopt -s nullglob
-          TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#v}"
-          APPIMAGES=(src-tauri/target/release/bundle/appimage/*.AppImage)
-
-          if [ ${#APPIMAGES[@]} -eq 0 ]; then
-            echo "No AppImage bundle was produced"
-            exit 1
-          fi
-
-          APPIMAGE_PATH="${APPIMAGES[0]}"
-          APPIMAGE_NAME=$(basename "$APPIMAGE_PATH")
-          SIG_CONTENT=$(tr -d '\n' < "${APPIMAGE_PATH}.sig")
-          NOTES=$(gh api "repos/${GITHUB_REPOSITORY}/releases/generate-notes" -f tag_name="$TAG" --jq '.body')
-          PUB_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
+          APPIMAGE="$(find src-tauri/target/release/bundle/appimage -maxdepth 1 -type f -name '*.AppImage' -print -quit)"
+          SIGNATURE="${APPIMAGE}.sig"
+          test -n "$APPIMAGE" && test -f "$SIGNATURE"
+          APPIMAGE_NAME="$(basename "$APPIMAGE")"
+          SIGNATURE_CONTENT="$(tr -d '\n' < "$SIGNATURE")"
           jq -n \
             --arg version "$VERSION" \
-            --arg notes "$NOTES" \
-            --arg pub_date "$PUB_DATE" \
-            --arg signature "$SIG_CONTENT" \
-            --arg url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${APPIMAGE_NAME}" \
-            '{
-              version: $version,
-              notes: $notes,
-              pub_date: $pub_date,
-              platforms: {
-                "linux-x86_64": {
-                  signature: $signature,
-                  url: $url
-                }
-              }
-            }' > latest.json
+            --arg notes "See the GitHub release notes." \
+            --arg pub_date "$(date --utc +'%Y-%m-%dT%H:%M:%SZ')" \
+            --arg url "https://github.com/$REPOSITORY/releases/download/$TAG/$APPIMAGE_NAME" \
+            --arg signature "$SIGNATURE_CONTENT" \
+            '{version: $version, notes: $notes, pub_date: $pub_date, platforms: {"linux-x86_64": {url: $url, signature: $signature}}}' \
+            > latest.json
 
-      - name: Collect artifacts into flat directory
+      - name: Collect release assets
         run: |
           mkdir -p dist
           find src-tauri/target/release/bundle/appimage -name "*.AppImage" -exec cp {} dist/ \;
@@ -182,7 +280,6 @@ jobs:
           find src-tauri/target/release/bundle/deb -name "*.deb" -exec cp {} dist/ \;
           find src-tauri/target/release/bundle/rpm -name "*.rpm" -exec cp {} dist/ \;
           cp latest.json dist/
-          ls -la dist/
 
       - name: Upload release assets
         uses: actions/upload-artifact@v4
@@ -197,6 +294,24 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+      - name: Check out the release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+          fetch-depth: 0
+
+      - name: Create the release tag
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
       - name: Download release assets
         uses: actions/download-artifact@v4
         with:
@@ -206,15 +321,10 @@ jobs:
       - name: Extract AppImage
         run: |
           shopt -s nullglob
-          APPIMAGES=(dist/*.AppImage)
-
-          if [ ${#APPIMAGES[@]} -eq 0 ]; then
-            echo "No AppImage available for smoke test"
-            exit 1
-          fi
-
-          chmod +x "${APPIMAGES[0]}"
-          "${APPIMAGES[0]}" --appimage-extract >/dev/null
+          appimages=(dist/*.AppImage)
+          test "${#appimages[@]}" -gt 0
+          chmod +x "${appimages[0]}"
+          "${appimages[0]}" --appimage-extract >/dev/null
 
   smoke-deb:
     name: Smoke test Debian package
@@ -254,6 +364,7 @@ jobs:
   publish:
     name: Publish GitHub release
     needs:
+      - prepare
       - build
       - smoke-appimage
       - smoke-deb
@@ -261,9 +372,6 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Download release assets
         uses: actions/download-artifact@v4
         with:
@@ -273,18 +381,19 @@ jobs:
       - name: Create or update GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+          TAG: ${{ needs.prepare.outputs.tag }}
         run: |
           shopt -s nullglob
-          TAG="${GITHUB_REF_NAME}"
-          ASSETS=(dist/*.AppImage dist/*.AppImage.sig dist/*.deb dist/*.rpm dist/latest.json)
-
-          if [ ${#ASSETS[@]} -eq 0 ]; then
-            echo "No assets available to publish"
-            exit 1
-          fi
+          assets=(dist/*.AppImage dist/*.AppImage.sig dist/*.deb dist/*.rpm dist/latest.json)
+          test "${#assets[@]}" -gt 0
 
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "${ASSETS[@]}" --clobber
+            gh release upload "$TAG" "${assets[@]}" --clobber
           else
-            gh release create "$TAG" --title "$TAG" --generate-notes "${ASSETS[@]}"
+            prerelease_flag=""
+            if [ "$PRERELEASE" = "true" ]; then
+              prerelease_flag="--prerelease"
+            fi
+            gh release create "$TAG" --title "$TAG" --generate-notes $prerelease_flag "${assets[@]}"
           fi

@@ -9,9 +9,9 @@ use tauri_plugin_updater::UpdaterExt;
 
 use crate::notifications::NotificationPort;
 
-const RELEASES_URL: &str = "https://github.com/symonbaikov/eye-relax/releases";
+const RELEASES_URL: &str = "https://github.com/symonbaikov/blinkly/releases";
 const UPDATE_ENDPOINT: &str =
-    "https://github.com/symonbaikov/eye-relax/releases/latest/download/latest.json";
+    "https://github.com/symonbaikov/blinkly/releases/latest/download/latest.json";
 const UPDATE_CHECK_INTERVAL: Duration = Duration::from_secs(12 * 60 * 60);
 const UPDATE_REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 
